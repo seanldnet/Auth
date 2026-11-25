@@ -43,7 +43,6 @@ final class EpayAdapter implements PaymentChannelAdapter
             'notify_url' => (string) $configuration['notify_url'],
             'return_url' => (string) ($configuration['return_url'] ?? ''),
             'name' => (string) ($order['subject'] ?? 'Auth balance top-up'),
-            'currency' => $providerCurrency,
             'sign_type' => 'MD5',
         ];
 
@@ -53,6 +52,9 @@ final class EpayAdapter implements PaymentChannelAdapter
         if (!empty($order['token']) && !empty($order['network'])) {
             $parameters['token'] = strtolower((string) $order['token']);
             $parameters['network'] = strtolower((string) $order['network']);
+        }
+        if (!empty($configuration['send_currency_override'])) {
+            $parameters['currency'] = $providerCurrency;
         }
 
         $parameters['sign'] = EpaySigner::sign($parameters, $secret);
