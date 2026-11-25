@@ -17,12 +17,12 @@ type CashierOrder = {
   paid_at: string | null;
 };
 
-const statusMeta: Record<CashierOrder["status"], { label: string; variant: "default" | "secondary" | "destructive" | "outline" | "success" | "warning" }> = {
+const statusMeta: Record<CashierOrder["status"], { label: string; variant: "secondary" | "outline" | "success" | "warning" }> = {
   CREATING: { label: "正在创建支付订单", variant: "secondary" },
   PENDING: { label: "等待支付", variant: "warning" },
   PAID: { label: "支付成功", variant: "success" },
-  EXPIRED: { label: "订单已过期", variant: "destructive" },
-  CANCELLED: { label: "订单已取消", variant: "destructive" },
+  EXPIRED: { label: "订单已过期", variant: "warning" },
+  CANCELLED: { label: "订单已取消", variant: "outline" },
   REVIEW: { label: "支付结果待核查", variant: "outline" },
 };
 
