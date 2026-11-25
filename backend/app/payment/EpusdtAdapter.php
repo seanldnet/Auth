@@ -65,6 +65,7 @@ final class EpusdtAdapter implements PaymentChannelAdapter
             (string) $order['amount'],
             gmdate(DATE_ATOM, (int) ($data['expiration_time'] ?? time() + 900)),
             $paymentUrl,
+            providerTradeId: isset($data['trade_id']) ? (string) $data['trade_id'] : null,
         );
     }
 
