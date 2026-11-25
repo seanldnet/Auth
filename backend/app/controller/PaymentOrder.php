@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace app\controller;
 
 use app\auth\AuthContext;
+use app\http\RequestPayload;
 use app\payment\EpayAdapter;
 use app\payment\EpusdtAdapter;
 use app\payment\GmpayAdapter;
@@ -24,7 +25,7 @@ final class PaymentOrder
         }
 
         try {
-            $payload = $request->post();
+            $payload = RequestPayload::all($request);
             $currency = PaymentCurrency::from(strtoupper((string) ($payload['currency'] ?? '')));
             $idempotencyKey = (string) (
                 $request->header('idempotency-key')
