@@ -35,4 +35,4 @@ The payment schema and callback endpoint are a backend foundation. Channel confi
 - The React cashier page polls this endpoint every five seconds while the order is being created or is pending.
 - An ambiguous provider creation timeout moves the local order to `REVIEW`; it is not blindly retried, avoiding duplicate charges.
 
-The authenticated order-creation controller and the complete admin channel-configuration UI are added after the platform authentication/RBAC layer is available.
+The service and public cashier read endpoint are implemented. The authenticated order-creation controller and complete admin channel-configuration UI are intentionally gated on the platform authentication/RBAC layer; do not expose order creation without that layer.
