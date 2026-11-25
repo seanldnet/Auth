@@ -26,6 +26,65 @@ final class GmpayHttpClient
     }
 
     /**
+     * Submit an EPay form to a legacy gateway that responds with an HTTP redirect.
+     *
+     * @param array<string, scalar|null> $parameters
+     */
+    public static function postFormRedirect(string $baseUrl, string $path, array $parameters, int $timeout = 12): string
+    {
+        if (!extension_loaded('curl')) {
+            throw new RuntimeException('The PHP cURL extension is required for payment gateway calls.');
+        }
+
+        $parts = parse_url($baseUrl);
+        if (($parts['scheme'] ?? '') !== 'https' || empty($parts['host'])) {
+            throw new RuntimeException('Payment gateway base URL must use HTTPS.');
+        }
+
+        $handle = curl_init(rtrim($baseUrl, '/') . '/' . ltrim($path, '/'));
+        if ($handle === false) {
+            throw new RuntimeException('Unable to initialize EPay cashier request.');
+        }
+
+        curl_setopt_array($handle, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_HEADER => true,
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query($parameters),
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_TIMEOUT => $timeout,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
+            CURLOPT_SSL_VERIFYPEER => true,
+            CURLOPT_SSL_VERIFYHOST => 2,
+            CURLOPT_HTTPHEADER => [
+                'Accept: text/html,application/json',
+                'Content-Type: application/x-www-form-urlencoded',
+            ],
+        ]);
+
+        $raw = curl_exec($handle);
+        $status = (int) curl_getinfo($handle, CURLINFO_RESPONSE_CODE);
+        $headerSize = (int) curl_getinfo($handle, CURLINFO_HEADER_SIZE);
+        $error = curl_error($handle);
+        curl_close($handle);
+
+        if ($raw === false) {
+            throw new RuntimeException('EPay gateway network error: ' . $error);
+        }
+        if (!in_array($status, [301, 302, 303, 307, 308], true)) {
+            throw new RuntimeException('EPay gateway did not return the configured cashier redirect.');
+        }
+
+        $headers = substr($raw, 0, $headerSize);
+        if (!preg_match('/^Location:\s*(.+)$/im', $headers, $matches)) {
+            throw new RuntimeException('EPay gateway redirect is missing a Location header.');
+        }
+
+        return trim($matches[1]);
+    }
+
+    /**
      * @param array<string, scalar|null> $parameters
      * @return array<string, mixed>
      */
