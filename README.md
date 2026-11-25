@@ -40,6 +40,9 @@
 3. 每项代码变更必须关联需求/缺陷、Git Commit、测试结果和文档影响。
 4. 性能目标必须通过分区域、持续压测验证，不得将规划指标描述为已达成能力。
 5. 密钥、设备标识及个人信息按最小必要原则处理，跨区域数据同步须经过合规评估。
+6. CNY 与 USDT 独立记账、独立展示，平台不提供汇率换算或币种互兑。
+7. 支付渠道使用独立适配器；EPUSDT、GMPay 与 EPay 收银台按官方协议实现，真实商户联调完成前不得标记为已接通。
+8. 所有前端页面必须使用 shadcn/ui 体系并遵循统一留白、间距和响应式规范。
 - [支付渠道与收银台架构](docs/architecture/payment-channel-architecture.md)
 - [币种与支付渠道最终确认](docs/requirements/currency-and-payment-decisions.md)
 - [前端 UI 与页面布局规范](docs/development/frontend-ui-standards.md)
