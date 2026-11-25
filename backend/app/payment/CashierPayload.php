@@ -16,6 +16,7 @@ final readonly class CashierPayload
         public string $expiresAt,
         public ?string $redirectUrl = null,
         public array $formFields = [],
+        public ?string $providerTradeId = null,
     ) {
         if ($redirectUrl === null && $formFields === []) {
             throw new \InvalidArgumentException('A cashier redirect URL or form payload is required.');
