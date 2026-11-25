@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace tests;
 
-use app\\payment\\PaymentCurrency;
-use PHPUnit\\Framework\\TestCase;
+use app\payment\PaymentCurrency;
+use PHPUnit\Framework\TestCase;
 
 final class PaymentCurrencyTest extends TestCase
 {
