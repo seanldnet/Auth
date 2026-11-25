@@ -57,9 +57,12 @@ final class AuthSessionService
             throw new RuntimeException('账号当前不可登录，请联系管理员。');
         }
 
-        $algorithm = defined('PASSWORD_ARGON2ID') ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT;
+        $algorithm = in_array('argon2id', password_algos(), true) ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT;
         if (password_needs_rehash((string) $user['password_hash'], $algorithm)) {
             $newHash = password_hash($password, $algorithm);
+            if (!is_string($newHash)) {
+                throw new RuntimeException('Unable to upgrade the stored password hash.');
+            }
             Db::execute(
                 'UPDATE auth_users SET password_hash = ?, password_updated_at = UTC_TIMESTAMP(), updated_at = UTC_TIMESTAMP() WHERE id = ?',
                 [$newHash, (int) $user['id']],
