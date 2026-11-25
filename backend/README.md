@@ -50,3 +50,18 @@ The service and public cashier read endpoint are implemented. The authenticated 
 - The initial role set is ADMIN, AGENT, SUB_AGENT, USER. Admin-only API routes must use `AdminMiddleware`; do not rely on front-end visibility for authorization.
 
 Payment order creation is now available at authenticated `POST /api/payments/orders`. The public cashier read endpoint remains protected by the per-order high-entropy checkout token.
+
+## Payment channel administration
+
+- `GET /api/admin/payment-channels` lists channel status and non-secret configuration; it never returns merchant Secret values.
+- `PUT /api/admin/payment-channels/{channelCode}` is restricted to ADMIN sessions. Merchant secrets are encrypted with AES-256-GCM before persistence.
+- Supported configurable channel codes are ALIPAY, WECHAT_PAY, EPAY, EPUSDT and GMPAY. Alipay/WeChat are visible but cannot be enabled until their official adapters are implemented.
+- EPUSDT, GMPay and EPay require HTTPS API/callback URLs, a cashier hostname allow-list and an explicit provider-currency mapping for each enabled platform currency.
+- EPay with no currency override must match the gateway's configured default currency. Enabling both platform currencies with different provider currencies requires an EPay merchant API version that explicitly supports the currency parameter.
+
+## Authenticated payment order API
+
+- `POST /api/payments/orders` requires an authenticated session and an `Idempotency-Key` header (or `idempotency_key` JSON field).
+- Request JSON fields: `channel_code`, `currency` (`CNY` or `USDT`), `amount`, optional `payment_type`, and optional paired `token` + `network`.
+- The provider currency is selected from the administrator's explicit `provider_currency_by_platform_currency` map. Provider amount is exactly the same numeric amount as the platform order amount; the service performs no exchange-rate conversion.
+- The API returns an Auth `checkout_url`; the customer page then displays the validated provider cashier URL and polls the order status.
