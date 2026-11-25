@@ -28,6 +28,14 @@ final class EpayAdapter implements PaymentChannelAdapter
             throw new RuntimeException('EPay credentials and explicit provider amount/currency are required.');
         }
 
+        $notifyUrl = (string) ($configuration['notify_url'] ?? '');
+        if ((parse_url($notifyUrl, PHP_URL_SCHEME) ?: '') !== 'https') {
+            throw new RuntimeException('Payment notification URL must use HTTPS.');
+        }
+        if (!empty($order['token']) !== !empty($order['network'])) {
+            throw new RuntimeException('Provider token and network must be supplied together.');
+        }
+
         $parameters = [
             'pid' => $pid,
             'money' => $providerAmount,
