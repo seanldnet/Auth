@@ -100,6 +100,11 @@ final class EpusdtAdapter implements PaymentChannelAdapter
             '/pay/check-status/' . rawurlencode($tradeId),
         );
         $status = (int) ($response['data']['status'] ?? 0);
+        $details = GmpayHttpClient::get(
+            (string) $configuration['base_url'],
+            '/pay/checkout-counter-resp/' . rawurlencode($tradeId),
+        );
+        $snapshot = (array) ($details['data'] ?? []);
 
         return [
             'status' => match ($status) {
@@ -107,14 +112,17 @@ final class EpusdtAdapter implements PaymentChannelAdapter
                 3 => 'EXPIRED',
                 5 => 'PROCESSING',
                 6 => 'REVIEW',
-                1, 4 => 'PENDING',
+                1 => 'PENDING',
+                4 => 'AWAITING_SELECTION',
                 default => 'UNKNOWN',
             },
-            'provider_transaction_id' => isset($order['provider_transaction_id'])
-                ? (string) $order['provider_transaction_id']
+            'provider_transaction_id' => isset($snapshot['block_transaction_id'])
+                ? (string) $snapshot['block_transaction_id']
                 : null,
-            'amount' => (string) $order['provider_amount'],
-            'currency' => (string) $order['provider_currency'],
+            'amount' => isset($snapshot['amount']) ? (string) $snapshot['amount'] : '',
+            'currency' => strtoupper((string) ($snapshot['currency'] ?? '')),
+            'trade_id' => isset($snapshot['trade_id']) ? (string) $snapshot['trade_id'] : $tradeId,
+            'order_id' => isset($snapshot['order_id']) ? (string) $snapshot['order_id'] : (string) $order['platform_order_no'],
         ];
     }
 
