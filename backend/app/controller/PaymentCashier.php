@@ -6,11 +6,10 @@ namespace app\controller;
 use app\payment\EpayAdapter;
 use app\payment\EpusdtAdapter;
 use app\payment\GmpayAdapter;
+use app\payment\CashierNotFoundException;
 use app\payment\PaymentChannelRegistry;
 use app\payment\PaymentOrderService;
-use RuntimeException;
 use think\response\Json;
-use Throwable;
 
 final class PaymentCashier
 {
@@ -21,11 +20,7 @@ final class PaymentCashier
             unset($data['checkout_token']);
 
             return json(['success' => true, 'data' => $data]);
-        } catch (Throwable $exception) {
-            if (!$exception instanceof RuntimeException) {
-                throw $exception;
-            }
-
+        } catch (CashierNotFoundException) {
             return json(['success' => false, 'message' => '收银台订单不存在或访问凭据无效'], 404);
         }
     }
