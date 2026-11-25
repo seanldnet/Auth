@@ -186,6 +186,8 @@ final class PaymentOrderService
                 || $cashier->currency !== $currency
                 || PaymentCallbackProcessor::normalizeDecimal($cashier->amount) !== PaymentCallbackProcessor::normalizeDecimal($amount)
                 || $cashier->redirectUrl === null
+                || $cashier->providerTradeId === null
+                || trim($cashier->providerTradeId) === ''
             ) {
                 throw new RuntimeException('Payment adapter returned a cashier payload inconsistent with the local order.');
             }
