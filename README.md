@@ -1,0 +1,39 @@
+# Auth｜多软件授权管理平台
+
+> 项目阶段：需求与技术方案整理。当前不包含业务代码，不代表系统已实现或已通过性能、安全验收。
+
+## 项目目标
+建设面向多软件、多租户及代理体系的授权管理平台，支持全球国内/海外独立授权集群、设备绑定、额度与财务管理、非对称数字签名、密钥生命周期管理及完整开发审计。
+
+## 当前基线
+- 后端：ThinkPHP
+- 前端：React + TypeScript
+- UI：shadcn/ui（前端 UI 组件必须使用该体系，不自行仿制替代组件）
+- 持久化：MySQL
+- 缓存：Redis 集群
+- 异步处理：消息队列
+- 签名：RSA-3072 + SHA-256；签名封装及填充规范见安全协议文档
+- 全球目标：国内、海外分别部署独立授权集群，每个区域独立扩展至 80,000 QPS；规划流量比例各 50%
+
+## 文档导航
+- [需求规格 V1.3](docs/requirements/PRD-V1.3.md)
+- [全球架构设计](docs/architecture/global-architecture.md)
+- [安全与密钥管理](docs/security/security-and-key-management.md)
+- [授权协议与 API 规范](docs/protocol/license-protocol-and-api.md)
+- [数据与日志设计](docs/data/data-and-logging.md)
+- [开发规范与审计制度](docs/development/development-governance.md)
+- [文档管理规范](docs/development/documentation-governance.md)
+- [待确认事项](docs/requirements/open-decisions.md)
+
+## 状态约定
+- **已确认**：用户明确确认的需求或技术约束。
+- **建议方案**：当前架构建议，尚未视为用户最终确认。
+- **待确认**：需要进一步决策，不能擅自实现为既定规则。
+- **未实现**：仅有文档定义，尚无代码或运行环境证明。
+
+## 开发原则
+1. 当前先完成需求、架构、协议、安全和开发治理文档，不提前开发业务功能。
+2. 代码变更必须通过 Pull Request 审核后才能合并；不得直接绕过审核修改主分支。
+3. 每项代码变更必须关联需求/缺陷、Git Commit、测试结果和文档影响。
+4. 性能目标必须通过分区域、持续压测验证，不得将规划指标描述为已达成能力。
+5. 密钥、设备标识及个人信息按最小必要原则处理，跨区域数据同步须经过合规评估。
