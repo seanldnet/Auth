@@ -48,21 +48,30 @@ final class EpayAdapter implements PaymentChannelAdapter
         }
 
         $parameters['sign'] = EpaySigner::sign($parameters, $secret);
-        $response = GmpayHttpClient::postForm(
-            (string) $configuration['base_url'],
-            (string) ($configuration['create_path'] ?? '/payments/epay/v1/order/create-transaction/mapi.php'),
-            $parameters,
-        );
+        $responseMode = (string) ($configuration['response_mode'] ?? 'json');
+        $createPath = (string) ($configuration['create_path'] ?? '/payments/epay/v1/order/create-transaction/mapi.php');
 
-        if (($response['code'] ?? null) !== 1 || empty($response['payurl'])) {
-            throw new RuntimeException('EPay rejected the payment order.');
+        if ($responseMode === 'redirect') {
+            $paymentUrl = GmpayHttpClient::postFormRedirect(
+                (string) $configuration['base_url'],
+                $createPath,
+                $parameters,
+            );
+            $providerTradeId = basename((string) parse_url($paymentUrl, PHP_URL_PATH));
+            $expiresAt = gmdate(DATE_ATOM, time() + (int) ($configuration['order_ttl_seconds'] ?? 900));
+        } else {
+            $response = GmpayHttpClient::postForm((string) $configuration['base_url'], $createPath, $parameters);
+            if (($response['code'] ?? null) !== 1 || empty($response['payurl'])) {
+                throw new RuntimeException('EPay rejected the payment order.');
+            }
+            $paymentUrl = (string) $response['payurl'];
+            $providerTradeId = isset($response['trade_no']) ? (string) $response['trade_no'] : null;
+            $expiresAt = gmdate(DATE_ATOM, time() + (int) ($configuration['order_ttl_seconds'] ?? 900));
         }
 
-        $paymentUrl = (string) $response['payurl'];
         $parts = parse_url($paymentUrl);
         $host = strtolower((string) ($parts['host'] ?? ''));
         $allowed = array_map('strtolower', (array) ($configuration['checkout_hosts'] ?? []));
-
         if (($parts['scheme'] ?? '') !== 'https' || $host === '' || !in_array($host, $allowed, true)) {
             throw new RuntimeException('EPay cashier URL failed HTTPS/host allow-list validation.');
         }
@@ -72,8 +81,9 @@ final class EpayAdapter implements PaymentChannelAdapter
             $this->code(),
             PaymentCurrency::from((string) $order['currency']),
             (string) $order['amount'],
-            gmdate(DATE_ATOM, time() + (int) ($configuration['order_ttl_seconds'] ?? 900)),
+            $expiresAt,
             $paymentUrl,
+            providerTradeId: $providerTradeId,
         );
     }
 
@@ -94,12 +104,7 @@ final class EpayAdapter implements PaymentChannelAdapter
             throw new RuntimeException('EPay credentials and provider trade number are required.');
         }
 
-        $parameters = [
-            'act' => 'order',
-            'pid' => $pid,
-            'trade_no' => $tradeNo,
-            'sign_type' => 'MD5',
-        ];
+        $parameters = ['act' => 'order', 'pid' => $pid, 'trade_no' => $tradeNo, 'sign_type' => 'MD5'];
         $parameters['sign'] = EpaySigner::sign($parameters, $secret);
         $response = GmpayHttpClient::get(
             (string) $configuration['base_url'],
