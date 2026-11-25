@@ -57,6 +57,11 @@ final class EpayAdapter implements PaymentChannelAdapter
                 $createPath,
                 $parameters,
             );
+            $locationParts = parse_url($paymentUrl);
+            if (!isset($locationParts['host']) && str_starts_with($paymentUrl, '/')) {
+                $baseParts = parse_url((string) $configuration['base_url']);
+                $paymentUrl = ($baseParts['scheme'] ?? 'https') . '://' . $baseParts['host'] . $paymentUrl;
+            }
             $providerTradeId = basename((string) parse_url($paymentUrl, PHP_URL_PATH));
             $expiresAt = gmdate(DATE_ATOM, time() + (int) ($configuration['order_ttl_seconds'] ?? 900));
         } else {
@@ -104,16 +109,33 @@ final class EpayAdapter implements PaymentChannelAdapter
             throw new RuntimeException('EPay credentials and provider trade number are required.');
         }
 
-        $parameters = ['act' => 'order', 'pid' => $pid, 'trade_no' => $tradeNo, 'sign_type' => 'MD5'];
-        $parameters['sign'] = EpaySigner::sign($parameters, $secret);
-        $response = GmpayHttpClient::get(
-            (string) $configuration['base_url'],
-            (string) ($configuration['query_path'] ?? '/payments/epay/v1/order/create-transaction/api.php'),
-            $parameters,
-        );
+        if (($configuration['query_mode'] ?? 'epay_api') === 'epusdt_status') {
+            $response = GmpayHttpClient::get(
+                (string) $configuration['base_url'],
+                '/pay/check-status/' . rawurlencode($tradeNo),
+            );
+            $providerStatus = (int) ($response['data']['status'] ?? 0);
+            $status = match ($providerStatus) {
+                2 => 'SUCCEEDED',
+                3 => 'EXPIRED',
+                5 => 'PROCESSING',
+                6 => 'REVIEW',
+                1, 4 => 'PENDING',
+                default => 'UNKNOWN',
+            };
+        } else {
+            $parameters = ['act' => 'order', 'pid' => $pid, 'trade_no' => $tradeNo, 'sign_type' => 'MD5'];
+            $parameters['sign'] = EpaySigner::sign($parameters, $secret);
+            $response = GmpayHttpClient::get(
+                (string) $configuration['base_url'],
+                (string) ($configuration['query_path'] ?? '/payments/epay/v1/order/create-transaction/api.php'),
+                $parameters,
+            );
+            $status = (int) ($response['status'] ?? 0) === 1 ? 'SUCCEEDED' : 'PENDING';
+        }
 
         return [
-            'status' => (int) ($response['status'] ?? 0) === 1 ? 'SUCCEEDED' : 'PENDING',
+            'status' => $status,
             'provider_transaction_id' => isset($response['trade_no']) ? (string) $response['trade_no'] : null,
             'amount' => (string) $order['provider_amount'],
             'currency' => (string) $order['provider_currency'],
