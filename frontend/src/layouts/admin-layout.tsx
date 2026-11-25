@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Activity, AppWindow, KeyRound, LayoutDashboard, Settings, Users } from "lucide-react";
+import { Activity, AppWindow, CreditCard, KeyRound, LayoutDashboard, Settings, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navigation = [
@@ -7,6 +7,7 @@ const navigation = [
   { label: "软件管理", to: "/apps", icon: AppWindow },
   { label: "授权管理", to: "/licenses", icon: KeyRound },
   { label: "用户与代理", to: "/users", icon: Users },
+  { label: "支付渠道", to: "/payments", icon: CreditCard },
   { label: "系统监控", to: "/monitoring", icon: Activity },
   { label: "系统设置", to: "/settings", icon: Settings },
 ];
