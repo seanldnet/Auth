@@ -68,7 +68,7 @@ final class EpayAdapter implements PaymentChannelAdapter
             $parameters,
         );
 
-        if (($response['code'] ?? null) !== 1 || empty($response['payurl']) || empty($response['trade_no'])) {
+        if ((int) ($response['code'] ?? 0) !== 1 || empty($response['payurl']) || empty($response['trade_no'])) {
             throw new RuntimeException('EPay rejected the payment order or omitted cashier identifiers.');
         }
 
@@ -111,30 +111,14 @@ final class EpayAdapter implements PaymentChannelAdapter
             throw new RuntimeException('EPay credentials and provider trade number are required.');
         }
 
-        if (($configuration['query_mode'] ?? 'epay_api') === 'epusdt_status') {
-            $response = GmpayHttpClient::get(
-                (string) $configuration['base_url'],
-                '/pay/check-status/' . rawurlencode($tradeNo),
-            );
-            $providerStatus = (int) ($response['data']['status'] ?? 0);
-            $status = match ($providerStatus) {
-                2 => 'SUCCEEDED',
-                3 => 'EXPIRED',
-                5 => 'PROCESSING',
-                6 => 'REVIEW',
-                1, 4 => 'PENDING',
-                default => 'UNKNOWN',
-            };
-        } else {
-            $parameters = ['act' => 'order', 'pid' => $pid, 'trade_no' => $tradeNo, 'sign_type' => 'MD5'];
-            $parameters['sign'] = EpaySigner::sign($parameters, $secret);
-            $response = GmpayHttpClient::get(
-                (string) $configuration['base_url'],
-                (string) ($configuration['query_path'] ?? '/payments/epay/v1/order/create-transaction/api.php'),
-                $parameters,
-            );
-            $status = (int) ($response['status'] ?? 0) === 1 ? 'SUCCEEDED' : 'PENDING';
-        }
+        $parameters = ['act' => 'order', 'pid' => $pid, 'trade_no' => $tradeNo, 'sign_type' => 'MD5'];
+        $parameters['sign'] = EpaySigner::sign($parameters, $secret);
+        $response = GmpayHttpClient::get(
+            (string) $configuration['base_url'],
+            (string) ($configuration['query_path'] ?? '/payments/epay/v1/order/create-transaction/api.php'),
+            $parameters,
+        );
+        $status = (int) ($response['status'] ?? 0) === 1 ? 'SUCCEEDED' : 'PENDING';
 
         return [
             'status' => $status,
