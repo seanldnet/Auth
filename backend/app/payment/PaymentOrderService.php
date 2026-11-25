@@ -276,7 +276,7 @@ final class PaymentOrderService
         );
         $order = $rows[0] ?? null;
         if (!is_array($order) || !hash_equals((string) $order['checkout_token_hash'], hash('sha256', $token))) {
-            throw new RuntimeException('Cashier order was not found.');
+            throw new CashierNotFoundException('Cashier order was not found.');
         }
 
         if (($order['status'] ?? '') === 'PENDING'
