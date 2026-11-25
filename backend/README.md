@@ -36,3 +36,17 @@ The payment schema and callback endpoint are a backend foundation. Channel confi
 - An ambiguous provider creation timeout moves the local order to `REVIEW`; it is not blindly retried, avoiding duplicate charges.
 
 The service and public cashier read endpoint are implemented. The authenticated order-creation controller and complete admin channel-configuration UI are intentionally gated on the platform authentication/RBAC layer; do not expose order creation without that layer.
+
+## Authentication and role foundation
+
+- Apply the auth schema after the payment schema: `mysql --default-character-set=utf8mb4 -u <user> -p <database> < database/schema/002_auth_core.sql`.
+- There is no built-in administrator or default password. Bootstrap the first administrator with process environment variables:
+  `AUTH_BOOTSTRAP_ADMIN_USERNAME=<admin-name> AUTH_BOOTSTRAP_ADMIN_PASSWORD=<random-16+-character-password> php bin/create-admin.php`.
+- The bootstrap command refuses to run if any user already exists. It marks the first account as requiring a password change.
+- Login is `POST /api/auth/login`; logout and current-user endpoints require the session middleware.
+- Sessions use 256-bit random opaque tokens in HttpOnly, SameSite=Lax cookies. Only SHA-256 token hashes are stored in MySQL; sessions expire after 12 hours.
+- Password hashes use Argon2id when available, otherwise PHP's default password algorithm. Login failures are throttled per username/IP pair; audit events are written without storing passwords or raw session tokens.
+- First login must change the bootstrap password to a new password of at least 12 characters before accessing protected routes.
+- The initial role set is ADMIN, AGENT, SUB_AGENT, USER. Admin-only API routes must use `AdminMiddleware`; do not rely on front-end visibility for authorization.
+
+Payment order creation is now available at authenticated `POST /api/payments/orders`. The public cashier read endpoint remains protected by the per-order high-entropy checkout token.
