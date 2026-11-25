@@ -1,6 +1,6 @@
 # Auth｜多软件授权管理平台
 
-> 项目阶段：需求与技术方案整理。当前不包含业务代码，不代表系统已实现或已通过性能、安全验收。
+> 项目阶段：基础工程初始化。业务功能、真实支付渠道和性能指标仍需逐项开发与验证。
 
 ## 项目目标
 建设面向多软件、多租户及代理体系的授权管理平台，支持全球国内/海外独立授权集群、设备绑定、额度与财务管理、非对称数字签名、密钥生命周期管理及完整开发审计。
@@ -24,6 +24,9 @@
 - [开发规范与审计制度](docs/development/development-governance.md)
 - [文档管理规范](docs/development/documentation-governance.md)
 - [待确认事项](docs/requirements/open-decisions.md)
+- [支付渠道与收银台架构](docs/architecture/payment-channel-architecture.md)
+- [币种与支付渠道最终确认](docs/requirements/currency-and-payment-decisions.md)
+- [前端 UI 与页面布局规范](docs/development/frontend-ui-standards.md)
 
 ## 状态约定
 - **已确认**：用户明确确认的需求或技术约束。
