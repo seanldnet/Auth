@@ -64,6 +64,28 @@ final class Auth
         return json(['success' => true]);
     }
 
+    public function changePassword(Request $request): Json
+    {
+        $user = AuthContext::get($request);
+        if ($user === null) {
+            return json(['success' => false, 'message' => '请先登录'], 401);
+        }
+
+        $payload = RequestPayload::all($request);
+        try {
+            (new AuthSessionService())->changePassword(
+                (int) $user['id'],
+                (int) $user['session_id'],
+                (string) ($payload['current_password'] ?? ''),
+                (string) ($payload['new_password'] ?? ''),
+            );
+
+            return json(['success' => true, 'message' => '密码已更新，请重新登录其他设备']);
+        } catch (RuntimeException $exception) {
+            return json(['success' => false, 'message' => $exception->getMessage()], 422);
+        }
+    }
+
     public function me(Request $request): Json
     {
         $user = AuthContext::get($request);
