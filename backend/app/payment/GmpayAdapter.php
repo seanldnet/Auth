@@ -111,20 +111,23 @@ final class GmpayAdapter implements PaymentChannelAdapter
             $parameters,
         );
         $data = (array) ($response['data'] ?? []);
-        $status = strtolower((string) ($data['status'] ?? 'unknown'));
+        $status = (int) ($data['status'] ?? 0);
 
         return [
             'status' => match ($status) {
-                '2', 'paid', 'success', 'succeeded' => 'SUCCEEDED',
-                '3', 'expired' => 'EXPIRED',
-                '1', 'pending', 'waiting' => 'PENDING',
+                2 => 'SUCCEEDED',
+                3 => 'EXPIRED',
+                4 => 'AWAITING_SELECTION',
+                1 => 'PENDING',
                 default => 'UNKNOWN',
             },
             'provider_transaction_id' => isset($data['block_transaction_id'])
                 ? (string) $data['block_transaction_id']
                 : null,
-            'amount' => (string) $order['provider_amount'],
-            'currency' => (string) $order['provider_currency'],
+            'amount' => (string) ($data['amount'] ?? ''),
+            'currency' => strtoupper((string) ($data['currency'] ?? '')),
+            'trade_id' => isset($data['trade_id']) ? (string) $data['trade_id'] : $tradeId,
+            'order_id' => isset($data['order_id']) ? (string) $data['order_id'] : (string) $order['platform_order_no'],
         ];
     }
 }
