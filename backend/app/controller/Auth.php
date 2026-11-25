@@ -26,7 +26,7 @@ final class Auth
             setcookie('auth_session', $result['token'], [
                 'expires' => time() + AuthSessionService::SESSION_TTL_SECONDS,
                 'path' => '/',
-                'secure' => $request->isSsl(),
+                'secure' => $request->isSsl() || !(bool) config('app.app_debug', false),
                 'httponly' => true,
                 'samesite' => 'Lax',
             ]);
@@ -56,7 +56,7 @@ final class Auth
         setcookie('auth_session', '', [
             'expires' => time() - 3600,
             'path' => '/',
-            'secure' => $request->isSsl(),
+            'secure' => $request->isSsl() || !(bool) config('app.app_debug', false),
             'httponly' => true,
             'samesite' => 'Lax',
         ]);
