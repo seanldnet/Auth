@@ -5,6 +5,7 @@ namespace app\controller;
 
 use app\auth\AuthContext;
 use app\auth\AuthSessionService;
+use app\http\RequestPayload;
 use RuntimeException;
 use think\Request;
 use think\response\Json;
@@ -14,7 +15,7 @@ final class Auth
     public function login(Request $request): Json
     {
         try {
-            $payload = $request->post();
+            $payload = RequestPayload::all($request);
             $result = (new AuthSessionService())->login(
                 (string) ($payload['username'] ?? ''),
                 (string) ($payload['password'] ?? ''),
