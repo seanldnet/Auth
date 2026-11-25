@@ -19,6 +19,7 @@
 - [需求规格 V1.3](docs/requirements/PRD-V1.3.md)
 - [全球架构设计](docs/architecture/global-architecture.md)
 - [安全与密钥管理](docs/security/security-and-key-management.md)
+- [身份认证与会话安全](docs/security/authentication-and-session-security.md)
 - [授权协议与 API 规范](docs/protocol/license-protocol-and-api.md)
 - [数据与日志设计](docs/data/data-and-logging.md)
 - [开发规范与审计制度](docs/development/development-governance.md)
