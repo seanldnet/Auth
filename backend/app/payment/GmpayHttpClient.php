@@ -20,6 +20,15 @@ final class GmpayHttpClient
      * @param array<string, scalar|null> $parameters
      * @return array<string, mixed>
      */
+    public static function postForm(string $baseUrl, string $path, array $parameters, int $timeout = 12): array
+    {
+        return self::request($baseUrl, $path, 'POST', $parameters, $timeout, true);
+    }
+
+    /**
+     * @param array<string, scalar|null> $parameters
+     * @return array<string, mixed>
+     */
     public static function get(string $baseUrl, string $path, array $parameters = [], int $timeout = 8): array
     {
         return self::request($baseUrl, $path, 'GET', $parameters, $timeout);
@@ -35,6 +44,7 @@ final class GmpayHttpClient
         string $method,
         array $parameters,
         int $timeout,
+        bool $formEncoded = false,
     ): array {
         if (!extension_loaded('curl')) {
             throw new RuntimeException('The PHP cURL extension is required for payment gateway calls.');
@@ -68,12 +78,16 @@ final class GmpayHttpClient
         ];
 
         if ($method === 'POST') {
-            $body = json_encode($parameters, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
+            $body = $formEncoded
+                ? http_build_query($parameters)
+                : json_encode($parameters, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
             $options[CURLOPT_POST] = true;
             $options[CURLOPT_POSTFIELDS] = $body;
             $options[CURLOPT_HTTPHEADER] = [
                 'Accept: application/json',
-                'Content-Type: application/json',
+                $formEncoded
+                    ? 'Content-Type: application/x-www-form-urlencoded'
+                    : 'Content-Type: application/json',
             ];
         }
 
