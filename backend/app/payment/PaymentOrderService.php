@@ -38,6 +38,33 @@ final class PaymentOrderService
 
         $amount = self::normalizePositiveAmount($amount);
         $channelCode = strtoupper($channelCode);
+        $paymentType = trim((string) ($options['payment_type'] ?? ''));
+        $token = trim((string) ($options['token'] ?? ''));
+        $network = trim((string) ($options['network'] ?? ''));
+        if (($token === '') !== ($network === '')) {
+            throw new RuntimeException('Provider token and network must be selected together.');
+        }
+
+        $existingRows = Db::query(
+            'SELECT * FROM auth_payment_orders WHERE user_id = ? AND idempotency_key = ? LIMIT 1',
+            [$userId, $idempotencyKey],
+        );
+        if (isset($existingRows[0]) && is_array($existingRows[0])) {
+            $existing = $existingRows[0];
+            if (strtoupper((string) $existing['channel_code']) !== $channelCode
+                || (string) $existing['currency'] !== $currency->value
+                || PaymentCallbackProcessor::normalizeDecimal((string) $existing['amount']) !== PaymentCallbackProcessor::normalizeDecimal($amount)
+                || (string) ($existing['payment_type'] ?? '') !== $paymentType
+                || (string) ($existing['provider_token'] ?? '') !== $token
+                || (string) ($existing['provider_network'] ?? '') !== $network
+            ) {
+                throw new RuntimeException('Idempotency key was already used with different payment parameters.');
+            }
+
+            $existingToken = self::checkoutToken($userId, (string) $existing['order_no'], $idempotencyKey);
+            return self::presentOrder($existing, $existingToken);
+        }
+
         $adapter = $this->registry->get($channelCode);
 
         if (!in_array($currency, $adapter->supportedCurrencies(), true)) {
@@ -84,13 +111,6 @@ final class PaymentOrderService
         $providerAmount = $amount;
         if (PaymentCallbackProcessor::normalizeDecimal($providerAmount) !== PaymentCallbackProcessor::normalizeDecimal($amount)) {
             throw new RuntimeException('Currency conversion is disabled; provider and platform amounts must be identical.');
-        }
-
-        $token = trim((string) ($options['token'] ?? ''));
-        $network = trim((string) ($options['network'] ?? ''));
-        $paymentType = trim((string) ($options['payment_type'] ?? ''));
-        if (($token === '') !== ($network === '')) {
-            throw new RuntimeException('Provider token and network must be selected together.');
         }
 
         $wallet = Db::name('wallet_accounts')
