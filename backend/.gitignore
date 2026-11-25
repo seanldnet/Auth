@@ -1,0 +1,7 @@
+/.env
+/vendor/
+/runtime/
+/.phpunit.cache/
+/.idea/
+/.vscode/
+.DS_Store
