@@ -242,7 +242,7 @@ final class PaymentOrderService
 
         if (($order['status'] ?? '') === 'PENDING'
             && !empty($order['expires_at'])
-            && strtotime((string) $order['expires_at']) <= time()
+            && strtotime((string) $order['expires_at'] . ' UTC') <= time()
         ) {
             Db::execute(
                 'UPDATE auth_payment_orders SET status = ?, updated_at = NOW() WHERE order_no = ? AND status = ?',
