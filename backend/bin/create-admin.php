@@ -30,13 +30,18 @@ if (!is_string($passwordHash)) {
     exit(1);
 }
 
-Db::name('users')->insert([
+$userId = Db::name('users')->insertGetId([
     'username' => $username,
     'password_hash' => $passwordHash,
     'role' => 'ADMIN',
     'status' => 'ACTIVE',
     'must_change_password' => 1,
     'password_updated_at' => gmdate('Y-m-d H:i:s'),
+]);
+
+Db::name('wallet_accounts')->insertAll([
+    ['user_id' => $userId, 'currency' => 'CNY', 'balance' => '0'],
+    ['user_id' => $userId, 'currency' => 'USDT', 'balance' => '0'],
 ]);
 
 fwrite(STDOUT, "Bootstrap administrator created. Sign in and change the password before configuring the platform.\n");
