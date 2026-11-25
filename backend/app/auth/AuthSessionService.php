@@ -145,6 +145,8 @@ final class AuthSessionService
         int $currentSessionId,
         string $currentPassword,
         string $newPassword,
+        string $ipAddress = '',
+        string $userAgent = '',
     ): void {
         if ($userId < 1 || $currentSessionId < 1 || strlen($newPassword) < 12 || strlen($newPassword) > 1024) {
             throw new RuntimeException('新密码长度必须为 12 至 1024 个字符。');
@@ -182,6 +184,7 @@ final class AuthSessionService
                 [$userId, $currentSessionId],
             );
         });
+        $this->audit($userId, 'PASSWORD_CHANGED', $ipAddress, $userAgent);
     }
 
     public function logout(string $token, string $ipAddress = '', string $userAgent = ''): void
