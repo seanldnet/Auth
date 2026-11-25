@@ -32,5 +32,6 @@
   "scripts": {
     "test": "phpunit",
     "check:syntax": "find app tests -name '*.php' -print0 | xargs -0 -n1 php -l"
-  }
+  },
+  "license": "proprietary"
 }
