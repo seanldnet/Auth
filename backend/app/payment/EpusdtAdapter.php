@@ -28,6 +28,17 @@ final class EpusdtAdapter implements PaymentChannelAdapter
             throw new RuntimeException('EPUSDT merchant credentials and explicit provider amount/currency mapping are required.');
         }
 
+        $hasToken = !empty($order['token']);
+        $hasNetwork = !empty($order['network']);
+        if ($hasToken !== $hasNetwork) {
+            throw new RuntimeException('Provider token and network must be supplied together.');
+        }
+
+        $notifyUrl = (string) ($configuration['notify_url'] ?? '');
+        if ((parse_url($notifyUrl, PHP_URL_SCHEME) ?: '') !== 'https') {
+            throw new RuntimeException('Payment notification URL must use HTTPS.');
+        }
+
         $parameters = [
             'pid' => $pid,
             'order_id' => (string) $order['platform_order_no'],
