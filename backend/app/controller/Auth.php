@@ -78,6 +78,8 @@ final class Auth
                 (int) $user['session_id'],
                 (string) ($payload['current_password'] ?? ''),
                 (string) ($payload['new_password'] ?? ''),
+                (string) $request->ip(),
+                (string) $request->header('user-agent', ''),
             );
 
             return json(['success' => true, 'message' => '密码已更新，请重新登录其他设备']);
