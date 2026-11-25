@@ -56,31 +56,20 @@ final class EpayAdapter implements PaymentChannelAdapter
         }
 
         $parameters['sign'] = EpaySigner::sign($parameters, $secret);
-        $responseMode = (string) ($configuration['response_mode'] ?? 'json');
         $createPath = (string) ($configuration['create_path'] ?? '/payments/epay/v1/order/create-transaction/mapi.php');
+        $response = GmpayHttpClient::postForm(
+            (string) $configuration['base_url'],
+            $createPath,
+            $parameters,
+        );
 
-        if ($responseMode === 'redirect') {
-            $paymentUrl = GmpayHttpClient::postFormRedirect(
-                (string) $configuration['base_url'],
-                $createPath,
-                $parameters,
-            );
-            $locationParts = parse_url($paymentUrl);
-            if (!isset($locationParts['host']) && str_starts_with($paymentUrl, '/')) {
-                $baseParts = parse_url((string) $configuration['base_url']);
-                $paymentUrl = ($baseParts['scheme'] ?? 'https') . '://' . $baseParts['host'] . $paymentUrl;
-            }
-            $providerTradeId = basename((string) parse_url($paymentUrl, PHP_URL_PATH));
-            $expiresAt = gmdate(DATE_ATOM, time() + (int) ($configuration['order_ttl_seconds'] ?? 900));
-        } else {
-            $response = GmpayHttpClient::postForm((string) $configuration['base_url'], $createPath, $parameters);
-            if (($response['code'] ?? null) !== 1 || empty($response['payurl'])) {
-                throw new RuntimeException('EPay rejected the payment order.');
-            }
-            $paymentUrl = (string) $response['payurl'];
-            $providerTradeId = isset($response['trade_no']) ? (string) $response['trade_no'] : null;
-            $expiresAt = gmdate(DATE_ATOM, time() + (int) ($configuration['order_ttl_seconds'] ?? 900));
+        if (($response['code'] ?? null) !== 1 || empty($response['payurl']) || empty($response['trade_no'])) {
+            throw new RuntimeException('EPay rejected the payment order or omitted cashier identifiers.');
         }
+
+        $paymentUrl = (string) $response['payurl'];
+        $providerTradeId = (string) $response['trade_no'];
+        $expiresAt = gmdate(DATE_ATOM, time() + (int) ($configuration['order_ttl_seconds'] ?? 900));
 
         $parts = parse_url($paymentUrl);
         $host = strtolower((string) ($parts['host'] ?? ''));
@@ -145,8 +134,9 @@ final class EpayAdapter implements PaymentChannelAdapter
         return [
             'status' => $status,
             'provider_transaction_id' => isset($response['trade_no']) ? (string) $response['trade_no'] : null,
-            'amount' => (string) $order['provider_amount'],
+            'amount' => isset($response['money']) ? (string) $response['money'] : '',
             'currency' => (string) $order['provider_currency'],
+            'order_id' => isset($response['out_trade_no']) ? (string) $response['out_trade_no'] : (string) $order['platform_order_no'],
         ];
     }
 }
