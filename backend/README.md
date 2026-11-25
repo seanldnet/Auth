@@ -23,3 +23,16 @@ No production secrets belong in this repository. Payment credentials and signing
 - Wallet account rows for both currencies must be initialized when a user wallet is created. Missing wallet rows intentionally cause callback rejection and provider retry rather than silently creating an untracked account.
 
 The payment schema and callback endpoint are a backend foundation. Channel configuration management, payment order creation, customer cashier UI, reconciliation workers, and live merchant verification remain separate implementation steps.
+
+## Payment order and cashier flow
+
+- Payment order creation is provided by `PaymentOrderService::create()`; call it only after the authenticated API layer has resolved the user ID.
+- The caller supplies an idempotency key. Repeated requests with the same user and key return the same order instead of creating a second provider order.
+- Platform amount and provider amount are identical. The service requires an explicit provider-currency mapping for each platform currency and never calculates an exchange rate.
+- The user wallet must already have a separate row for the selected CNY or USDT currency.
+- The returned `checkout_url` is the Auth cashier page. Its 256-bit token is stored only as a SHA-256 hash in the payment order.
+- The public read endpoint is `GET /api/payments/cashier/{orderNo}/{token}`; it returns only safe order data and the validated provider cashier URL. It never returns merchant credentials.
+- The React cashier page polls this endpoint every five seconds while the order is being created or is pending.
+- An ambiguous provider creation timeout moves the local order to `REVIEW`; it is not blindly retried, avoiding duplicate charges.
+
+The service and public cashier read endpoint are implemented. The authenticated order-creation controller and complete admin channel-configuration UI are intentionally gated on the platform authentication/RBAC layer; do not expose order creation without that layer.
