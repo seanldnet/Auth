@@ -9,8 +9,6 @@ use think\facade\Db;
 final class AuthSessionService
 {
     public const SESSION_TTL_SECONDS = 43200;
-    private const LOGIN_WINDOW_SECONDS = 900;
-    private const MAX_FAILED_ATTEMPTS = 5;
 
     /**
      * @return array{token:string,expires_at:string,user:array<string,mixed>}
