@@ -11,3 +11,4 @@ Route::post('api/auth/login', 'Auth/login');
 Route::post('api/auth/logout', 'Auth/logout')->middleware(AuthMiddleware::class);
 Route::get('api/auth/me', 'Auth/me')->middleware(AuthMiddleware::class);
 Route::post('api/payments/orders', 'PaymentOrder/create')->middleware(AuthMiddleware::class);
+Route::post('api/auth/change-password', 'Auth/changePassword')->middleware(AuthMiddleware::class);
