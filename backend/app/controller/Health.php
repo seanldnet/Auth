@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-namespace app\\controller;
+namespace app\controller;
 
-use think\\response\\Json;
+use think\response\Json;
 
 class Health
 {
