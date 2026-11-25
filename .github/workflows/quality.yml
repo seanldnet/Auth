@@ -13,43 +13,66 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Detect backend project
+        id: detect
+        run: echo "present=$([ -f backend/composer.json ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
       - uses: shivammathur/setup-php@v2
+        if: steps.detect.outputs.present == 'true'
         with:
           php-version: '8.2'
           extensions: curl, pdo_mysql, redis
           coverage: none
-      - name: Install dependencies
-        working-directory: backend
+      - name: Install backend dependencies
+        if: steps.detect.outputs.present == 'true'
         run: composer install --no-interaction --prefer-dist
+        working-directory: backend
       - name: Validate Composer manifest
-        working-directory: backend
+        if: steps.detect.outputs.present == 'true'
         run: composer validate --strict
+        working-directory: backend
       - name: PHP syntax check
-        working-directory: backend
+        if: steps.detect.outputs.present == 'true'
         run: composer check:syntax
+        working-directory: backend
       - name: Run unit tests
-        working-directory: backend
+        if: steps.detect.outputs.present == 'true'
         run: composer test
-      - name: Dependency security audit
         working-directory: backend
+      - name: Dependency security audit
+        if: steps.detect.outputs.present == 'true'
         run: composer audit --no-interaction
+        working-directory: backend
+      - name: Explain skipped backend checks
+        if: steps.detect.outputs.present != 'true'
+        run: echo "Backend project not present in this change; checks will run when backend/ is introduced."
 
   frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Detect frontend project
+        id: detect
+        run: echo "present=$([ -f frontend/package.json ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
+        if: steps.detect.outputs.present == 'true'
         with:
           node-version: '22'
-      - name: Install dependencies
-        working-directory: frontend
+      - name: Install frontend dependencies
+        if: steps.detect.outputs.present == 'true'
         run: npm install
+        working-directory: frontend
       - name: Type check
-        working-directory: frontend
+        if: steps.detect.outputs.present == 'true'
         run: npm run typecheck
+        working-directory: frontend
       - name: Production build
-        working-directory: frontend
+        if: steps.detect.outputs.present == 'true'
         run: npm run build
-      - name: Dependency security audit
         working-directory: frontend
+      - name: Dependency security audit
+        if: steps.detect.outputs.present == 'true'
         run: npm audit --audit-level=high
+        working-directory: frontend
+      - name: Explain skipped frontend checks
+        if: steps.detect.outputs.present != 'true'
+        run: echo "Frontend project not present in this change; checks will run when frontend/ is introduced."
