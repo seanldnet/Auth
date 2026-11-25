@@ -17,15 +17,23 @@ jobs:
         with:
           php-version: '8.2'
           coverage: none
+        env:
+          fail-fast: true
       - name: Install dependencies
         working-directory: backend
         run: composer install --no-interaction --prefer-dist
       - name: Validate Composer manifest
         working-directory: backend
         run: composer validate --strict
+      - name: PHP syntax check
+        working-directory: backend
+        run: composer check:syntax
       - name: Run unit tests
         working-directory: backend
-        run: vendor/bin/phpunit
+        run: composer test
+      - name: Dependency security audit
+        working-directory: backend
+        run: composer audit --no-interaction
 
   frontend:
     runs-on: ubuntu-latest
@@ -43,3 +51,6 @@ jobs:
       - name: Production build
         working-directory: frontend
         run: npm run build
+      - name: Dependency security audit
+        working-directory: frontend
+        run: npm audit --audit-level=high
