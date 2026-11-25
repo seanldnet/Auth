@@ -72,6 +72,11 @@ final class PaymentCallbackProcessor
                 throw new RuntimeException('Payment order is not eligible for automatic settlement.');
             }
 
+            $expectedTradeId = trim((string) ($order['provider_trade_id'] ?? ''));
+            if ($expectedTradeId !== '' && !hash_equals($expectedTradeId, $providerTradeId)) {
+                throw new RuntimeException('Provider transaction ID does not match the local order snapshot.');
+            }
+
             if (self::normalizeDecimal($providerAmount) !== self::normalizeDecimal((string) $order['provider_amount'])) {
                 throw new RuntimeException('Callback amount differs from the immutable provider order snapshot.');
             }
