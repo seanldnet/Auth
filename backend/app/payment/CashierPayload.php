@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace app\\payment;
+namespace app\payment;
 
 final readonly class CashierPayload
 {
@@ -18,7 +18,7 @@ final readonly class CashierPayload
         public array $formFields = [],
     ) {
         if ($redirectUrl === null && $formFields === []) {
-            throw new \\InvalidArgumentException('A cashier redirect URL or form payload is required.');
+            throw new \InvalidArgumentException('A cashier redirect URL or form payload is required.');
         }
     }
 }
