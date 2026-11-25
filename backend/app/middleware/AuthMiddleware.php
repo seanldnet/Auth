@@ -43,6 +43,17 @@ final class AuthMiddleware
 
         AuthContext::set($request, $user);
 
+        $path = trim((string) $request->pathinfo(), '/');
+        if (!empty($user['must_change_password'])
+            && !in_array($path, ['api/auth/me', 'api/auth/logout', 'api/auth/change-password'], true)
+        ) {
+            return json([
+                'success' => false,
+                'code' => 'PASSWORD_CHANGE_REQUIRED',
+                'message' => '首次登录必须先修改密码',
+            ], 403);
+        }
+
         return $next($request);
     }
 }
