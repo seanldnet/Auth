@@ -88,6 +88,7 @@ final class PaymentOrderService
 
         $token = trim((string) ($options['token'] ?? ''));
         $network = trim((string) ($options['network'] ?? ''));
+        $paymentType = trim((string) ($options['payment_type'] ?? ''));
         if (($token === '') !== ($network === '')) {
             throw new RuntimeException('Provider token and network must be selected together.');
         }
@@ -112,6 +113,9 @@ final class PaymentOrderService
                 $amount,
                 $providerCurrency,
                 $providerAmount,
+                $paymentType,
+                $token,
+                $network,
                 $idempotencyKey,
                 $orderNo,
                 $checkoutTokenHash,
@@ -126,8 +130,8 @@ final class PaymentOrderService
 
                 Db::execute(
                     'INSERT INTO auth_payment_orders
-                        (order_no, user_id, idempotency_key, checkout_token_hash, channel_code, currency, amount, provider_currency, provider_amount, status, created_at, updated_at)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
+                        (order_no, user_id, idempotency_key, checkout_token_hash, channel_code, currency, amount, provider_currency, provider_amount, payment_type, provider_token, provider_network, status, created_at, updated_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())',
                     [
                         $orderNo,
                         $userId,
@@ -138,6 +142,9 @@ final class PaymentOrderService
                         $amount,
                         $providerCurrency,
                         $providerAmount,
+                        $paymentType !== '' ? $paymentType : null,
+                        $token !== '' ? $token : null,
+                        $network !== '' ? $network : null,
                         'CREATING',
                     ],
                 );
@@ -163,6 +170,9 @@ final class PaymentOrderService
             if (strtoupper((string) $order['channel_code']) !== $channelCode
                 || (string) $order['currency'] !== $currency->value
                 || PaymentCallbackProcessor::normalizeDecimal((string) $order['amount']) !== PaymentCallbackProcessor::normalizeDecimal($amount)
+                || (string) ($order['payment_type'] ?? '') !== $paymentType
+                || (string) ($order['provider_token'] ?? '') !== $token
+                || (string) ($order['provider_network'] ?? '') !== $network
             ) {
                 throw new RuntimeException('Idempotency key was already used with different payment parameters.');
             }
@@ -182,7 +192,7 @@ final class PaymentOrderService
             'provider_currency' => $providerCurrency,
             'provider_amount' => $providerAmount,
             'subject' => (string) ($options['subject'] ?? 'Account top-up'),
-            'payment_type' => isset($options['payment_type']) ? (string) $options['payment_type'] : null,
+            'payment_type' => $paymentType !== '' ? $paymentType : null,
             'token' => $token !== '' ? $token : null,
             'network' => $network !== '' ? $network : null,
         ];
