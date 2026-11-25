@@ -1,0 +1,55 @@
+name: Quality Gates
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl, pdo_mysql, redis
+          coverage: none
+      - name: Install dependencies
+        working-directory: backend
+        run: composer install --no-interaction --prefer-dist
+      - name: Validate Composer manifest
+        working-directory: backend
+        run: composer validate --strict
+      - name: PHP syntax check
+        working-directory: backend
+        run: composer check:syntax
+      - name: Run unit tests
+        working-directory: backend
+        run: composer test
+      - name: Dependency security audit
+        working-directory: backend
+        run: composer audit --no-interaction
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm install
+      - name: Type check
+        working-directory: frontend
+        run: npm run typecheck
+      - name: Production build
+        working-directory: frontend
+        run: npm run build
+      - name: Dependency security audit
+        working-directory: frontend
+        run: npm audit --audit-level=high
