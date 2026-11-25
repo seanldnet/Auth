@@ -33,7 +33,7 @@ export function LoginPage() {
         throw new Error(result.message || "登录失败，请检查账号和密码");
       }
 
-      navigate("/", { replace: true });
+      navigate(result.data.user.must_change_password ? "/change-password" : "/", { replace: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "登录请求失败，请稍后重试");
     } finally {
