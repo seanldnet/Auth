@@ -74,6 +74,12 @@ final class PaymentOrderService
         if ($providerCurrency === '') {
             throw new RuntimeException('The provider currency mapping must be explicitly configured for this platform currency.');
         }
+        if ($channelCode === 'EPAY'
+            && empty($configuration['send_currency_override'])
+            && strtolower((string) ($configuration['epay_default_currency'] ?? '')) !== $providerCurrency
+        ) {
+            throw new RuntimeException('EPay provider currency must match the gateway default or explicitly enable the currency override.');
+        }
 
         $providerAmount = $amount;
         if (PaymentCallbackProcessor::normalizeDecimal($providerAmount) !== PaymentCallbackProcessor::normalizeDecimal($amount)) {
