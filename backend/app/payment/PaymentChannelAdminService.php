@@ -39,6 +39,7 @@ final class PaymentChannelAdminService
                 'allowed_currencies' => is_array($row)
                     ? (json_decode((string) $row['allowed_currencies'], true) ?: [])
                     : $definition['currencies'],
+                'merchant_pid' => (string) ($row['merchant_pid'] ?? ''),
                 'merchant_pid_masked' => self::mask((string) ($row['merchant_pid'] ?? '')),
                 'has_credentials' => is_array($row) && (string) ($row['credentials_ciphertext'] ?? '') !== '',
                 'configuration' => is_array($configuration) ? $configuration : [],
