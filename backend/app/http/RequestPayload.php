@@ -11,7 +11,7 @@ final class RequestPayload
     /** @return array<string, mixed> */
     public static function all(Request $request): array
     {
-        $payload = array_merge($request->get(), $request->post());
+        $payload = $request->post();
         $contentType = strtolower((string) $request->header('content-type', ''));
 
         if (str_contains($contentType, 'application/json')) {
