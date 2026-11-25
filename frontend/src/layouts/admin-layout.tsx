@@ -14,7 +14,7 @@ const navigation = [
   { label: "系统设置", to: "/settings", icon: Settings },
 ];
 
-type SessionUser = { username: string; role: string };
+type SessionUser = { username: string; role: string; must_change_password?: boolean };
 
 export function AdminLayout() {
   const navigate = useNavigate();
@@ -34,7 +34,12 @@ export function AdminLayout() {
           navigate("/login", { replace: true });
           return;
         }
-        setUser(result.data.user as SessionUser);
+        const sessionUser = result.data.user as SessionUser;
+        if (sessionUser.must_change_password) {
+          navigate("/change-password", { replace: true });
+          return;
+        }
+        setUser(sessionUser);
       })
       .catch(() => {
         if (!controller.signal.aborted) navigate("/login", { replace: true });
