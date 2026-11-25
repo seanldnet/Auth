@@ -160,6 +160,13 @@ final class PaymentOrderService
         }
 
         if ((string) $order['order_no'] !== $orderNo) {
+            if (strtoupper((string) $order['channel_code']) !== $channelCode
+                || (string) $order['currency'] !== $currency->value
+                || PaymentCallbackProcessor::normalizeDecimal((string) $order['amount']) !== PaymentCallbackProcessor::normalizeDecimal($amount)
+            ) {
+                throw new RuntimeException('Idempotency key was already used with different payment parameters.');
+            }
+
             $checkoutToken = self::checkoutToken($userId, (string) $order['order_no'], $idempotencyKey);
             return self::presentOrder($order, $checkoutToken);
         }
