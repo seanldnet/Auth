@@ -140,6 +140,50 @@ final class AuthSessionService
         ];
     }
 
+    public function changePassword(
+        int $userId,
+        int $currentSessionId,
+        string $currentPassword,
+        string $newPassword,
+    ): void {
+        if ($userId < 1 || $currentSessionId < 1 || strlen($newPassword) < 12 || strlen($newPassword) > 1024) {
+            throw new RuntimeException('新密码长度必须为 12 至 1024 个字符。');
+        }
+
+        $rows = Db::query(
+            'SELECT password_hash FROM auth_users WHERE id = ? LIMIT 1',
+            [$userId],
+        );
+        $user = $rows[0] ?? null;
+        if (!is_array($user) || !password_verify($currentPassword, (string) $user['password_hash'])) {
+            throw new RuntimeException('当前密码不正确。');
+        }
+        if (password_verify($newPassword, (string) $user['password_hash'])) {
+            throw new RuntimeException('新密码不能与当前密码相同。');
+        }
+
+        $algorithm = in_array('argon2id', password_algos(), true) ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT;
+        $passwordHash = password_hash($newPassword, $algorithm);
+        if (!is_string($passwordHash)) {
+            throw new RuntimeException('无法安全保存新密码。');
+        }
+
+        Db::transaction(static function () use ($userId, $currentSessionId, $passwordHash): void {
+            Db::execute(
+                'UPDATE auth_users
+                 SET password_hash = ?, must_change_password = 0,
+                     password_updated_at = UTC_TIMESTAMP(), updated_at = UTC_TIMESTAMP()
+                 WHERE id = ?',
+                [$passwordHash, $userId],
+            );
+            Db::execute(
+                'UPDATE auth_user_sessions SET revoked_at = UTC_TIMESTAMP()
+                 WHERE user_id = ? AND id <> ? AND revoked_at IS NULL',
+                [$userId, $currentSessionId],
+            );
+        });
+    }
+
     public function logout(string $token, string $ipAddress = '', string $userAgent = ''): void
     {
         if (!preg_match('/^[a-f0-9]{64}$/', $token)) {
