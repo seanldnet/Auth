@@ -65,7 +65,8 @@ final class PaymentCallback
                 $configuration,
             );
 
-            return response('ok', 200, ['Content-Type' => 'text/plain; charset=utf-8']);
+            $acknowledgement = $channel === 'EPAY' ? 'success' : 'ok';
+            return response($acknowledgement, 200, ['Content-Type' => 'text/plain; charset=utf-8']);
         } catch (Throwable $exception) {
             Log::error('Payment callback rejected', [
                 'channel' => $channel,
