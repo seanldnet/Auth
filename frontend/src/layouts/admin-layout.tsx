@@ -52,12 +52,15 @@ export function AdminLayout() {
   }, [navigate]);
 
   async function logout() {
-    await fetch("/api/auth/logout", {
-      method: "POST",
-      credentials: "include",
-      headers: { Accept: "application/json" },
-    });
-    navigate("/login", { replace: true });
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+        headers: { Accept: "application/json" },
+      });
+    } finally {
+      navigate("/login", { replace: true });
+    }
   }
 
   if (loading || !user) {
