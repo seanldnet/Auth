@@ -27,6 +27,9 @@ final class EpayAdapter implements PaymentChannelAdapter
         if ($pid === '' || $secret === '' || $providerAmount === '' || $providerCurrency === '') {
             throw new RuntimeException('EPay credentials and explicit provider amount/currency are required.');
         }
+        if (!in_array($providerCurrency, ['cny', 'usd'], true)) {
+            throw new RuntimeException('EPay provider currency must be explicitly supported by the merchant gateway (CNY or USD).');
+        }
 
         $notifyUrl = (string) ($configuration['notify_url'] ?? '');
         if ((parse_url($notifyUrl, PHP_URL_SCHEME) ?: '') !== 'https') {
