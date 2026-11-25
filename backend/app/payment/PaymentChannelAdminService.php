@@ -70,7 +70,9 @@ final class PaymentChannelAdminService
         )));
         $allowedCurrencies = array_values(array_filter($allowedCurrencies, static fn (string $value): bool => $value !== ''));
 
-        if ($displayName === '' || $merchantPid === '' || $allowedCurrencies === []) {
+        if ($displayName === '' || mb_strlen($displayName, 'UTF-8') > 80
+            || $merchantPid === '' || strlen($merchantPid) > 128 || $allowedCurrencies === []
+        ) {
             throw new RuntimeException('Channel name, merchant PID and at least one currency are required.');
         }
         foreach ($allowedCurrencies as $currency) {
@@ -90,6 +92,10 @@ final class PaymentChannelAdminService
         $configuration = (array) ($input['configuration'] ?? []);
         $baseUrl = self::httpsUrl((string) ($configuration['base_url'] ?? ''), 'Gateway base URL');
         $notifyUrl = self::httpsUrl((string) ($configuration['notify_url'] ?? ''), 'Notification URL');
+        $expectedNotifyPath = '/api/payments/callback/' . $channelCode;
+        if (parse_url($notifyUrl, PHP_URL_PATH) !== $expectedNotifyPath) {
+            throw new RuntimeException('Notification URL path must end with ' . $expectedNotifyPath . '.');
+        }
         $returnUrl = trim((string) ($configuration['return_url'] ?? ''));
         if ($returnUrl !== '') {
             self::httpsUrl($returnUrl, 'Return URL');
