@@ -35,6 +35,12 @@ final class LicenseTermCalculatorTest extends TestCase
         self::assertSame('2025-02-28 10:30:00', LicenseTermCalculator::expiresAt($start, 'YEAR', 1)?->format('Y-m-d H:i:s'));
     }
 
+    public function testRejectsUnknownDurationUnit(): void
+    {
+        $this->expectException(RuntimeException::class);
+        LicenseTermCalculator::expiresAt(new DateTimeImmutable('now'), 'WEEK', 1);
+    }
+
     public function testRejectsInvalidDuration(): void
     {
         $this->expectException(RuntimeException::class);
