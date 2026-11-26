@@ -38,6 +38,7 @@ final class UserManagementService
                     [$username, $hash, 'USER', $parent, $parent, $parent !== null ? gmdate('Y-m-d H:i:s') : null, 'ACTIVE'],
                 );
                 $id = (int)Db::getLastInsID();
+                $this->initializeWalletAccounts($id);
                 $this->audit($parent, 'USER_REGISTERED', $id, $ip, $agent, [
                     'registration_type' => $parent === null ? 'PUBLIC_POOL' : 'INVITE',
                 ]);
@@ -141,6 +142,7 @@ final class UserManagementService
                      $parentId !== null ? gmdate('Y-m-d H:i:s') : null, 'ACTIVE', $generated ? 1 : 0],
                 );
                 $id = (int)Db::getLastInsID();
+                $this->initializeWalletAccounts($id);
                 $this->audit((int)$actor['id'], 'USER_CREATED', $id, $ip, $agent, ['role' => $role]);
             });
         } catch (\think\exception\DbException $exception) {
@@ -172,6 +174,17 @@ final class UserManagementService
             $rows = Db::query('SELECT id, username, role, parent_id, status, assigned_at FROM auth_users WHERE id = ? LIMIT 1', [$userId]);
             return $rows[0] ?? [];
         });
+    }
+
+    private function initializeWalletAccounts(int $userId): void
+    {
+        foreach (['CNY', 'USDT'] as $currency) {
+            Db::execute(
+                'INSERT INTO auth_wallet_accounts (user_id, currency, balance, created_at, updated_at)
+                 VALUES (?, ?, 0, UTC_TIMESTAMP(), UTC_TIMESTAMP())',
+                [$userId, $currency],
+            );
+        }
     }
 
     private function validateUsername(string $username): string
