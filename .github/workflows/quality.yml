@@ -197,3 +197,20 @@ jobs:
       - name: Run C SDK tests
         run: ctest --test-dir build --output-on-failure
         working-directory: sdk/c
+
+  rust-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: sdk/rust
+      - name: Run Rust SDK tests
+        run: cargo test --all
+        working-directory: sdk/rust
+      - name: Build Rust SDK release
+        run: cargo build --release
+        working-directory: sdk/rust
