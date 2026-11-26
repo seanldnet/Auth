@@ -181,3 +181,19 @@ jobs:
       - name: Run C++ SDK tests
         run: ctest --test-dir build --output-on-failure
         working-directory: sdk/cpp
+
+  c-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install C SDK dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake libssl-dev libcurl4-openssl-dev libjson-c-dev pkg-config
+      - name: Configure C SDK
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        working-directory: sdk/c
+      - name: Build C SDK
+        run: cmake --build build --parallel 2
+        working-directory: sdk/c
+      - name: Run C SDK tests
+        run: ctest --test-dir build --output-on-failure
+        working-directory: sdk/c
