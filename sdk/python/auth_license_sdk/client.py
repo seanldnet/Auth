@@ -77,6 +77,7 @@ class LicenseClient:
         self._key_id = key_id
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
+        self._owns_session = session is None
         self._session = session or requests.Session()
 
     def activate(self, license_key: str, device_fingerprint: str, device_label: str | None = None) -> LicenseResult:
@@ -145,7 +146,8 @@ class LicenseClient:
         )
 
     def close(self) -> None:
-        self._session.close()
+        if self._owns_session:
+            self._session.close()
 
     def __enter__(self) -> "LicenseClient":
         return self
