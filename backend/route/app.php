@@ -68,6 +68,8 @@ Route::patch('api/admin/licenses/:licenseId/status', 'LicenseManagement/status')
 Route::patch('api/admin/licenses/:licenseId/unbind', 'LicenseManagement/unbindDevice')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::post('api/admin/software/:softwareId/plans', 'SoftwareCatalog/planCreate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::put('api/admin/software/:softwareId/plans/:planId', 'SoftwareCatalog/planUpdate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::get('api/admin/wallets', 'WalletAdmin/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/admin/wallets/:userId/credit', 'WalletAdmin/credit')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/wallet-display-unit', 'WalletSettings/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::put('api/admin/wallet-display-unit', 'WalletSettings/save')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/regions', 'RegionNodes/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
