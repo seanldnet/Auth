@@ -34,6 +34,7 @@ export function LicensesPage() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [generated, setGenerated] = useState<GeneratedLicense[]>([]);
+  const [importText, setImportText] = useState("");
 
   const loadSoftware = useCallback(async () => {
     try {
@@ -83,6 +84,43 @@ export function LicensesPage() {
     finally { setSaving(false); }
   }
 
+  async function importKeys(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedSoftwareId || !selectedPlanId) return;
+    const keys = importText.split(/[\\r\\n,;，；]+/).map(value => value.trim()).filter(Boolean);
+    if (keys.length < 1 || keys.length > 500) { setError("请填写 1–500 个授权码，每行一个。"); return; }
+    setSaving(true); setError(""); setNotice("");
+    try {
+      const result = await request<{ imported: number }>(`/api/admin/software/${selectedSoftwareId}/licenses/import`, {
+        method: "POST", body: JSON.stringify({ plan_id: selectedPlanId, license_keys: keys }),
+      });
+      setNotice(`成功导入 ${result.imported} 个授权码。`);
+      setImportText(""); setPage(1); await loadLicenses();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "导入授权码失败"); }
+    finally { setSaving(false); }
+  }
+
+  async function exportLicenses() {
+    if (!selectedSoftwareId) return;
+    setError("");
+    try {
+      const params = new URLSearchParams({ status: statusFilter, keyword });
+      const response = await fetch(`/api/admin/software/${selectedSoftwareId}/licenses/export?${params}`, {
+        credentials: "include", headers: { Accept: "text/csv" },
+      });
+      if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || "导出失败");
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url; anchor.download = "licenses.csv"; anchor.click();
+      URL.revokeObjectURL(url);
+      setNotice("授权记录 CSV 已导出。出于安全原因，导出文件仅包含授权提示，不包含无法恢复的授权码明文。");
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "导出失败"); }
+  }
+
   async function updateStatus(item: License, status: "FROZEN" | "ACTIVE" | "VOID") {
     setError(""); setNotice("");
     try {
@@ -99,7 +137,7 @@ export function LicensesPage() {
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-2"><p className="text-sm font-medium text-primary">核心业务 / 授权中心</p><h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">授权码管理</h1><p className="max-w-3xl text-sm leading-6 text-muted-foreground">按软件和套餐生成授权码，管理待激活、正常、冻结及作废状态。完整授权码只在生成成功时展示一次，数据库不保存明文。</p></div>
-        <Button variant="outline" onClick={() => void loadLicenses()} disabled={loading}><RefreshCw className="size-4" />刷新</Button>
+        <div className="flex gap-2"><Button variant="outline" onClick={() => void exportLicenses()} disabled={!selectedSoftwareId}>导出 CSV</Button><Button variant="outline" onClick={() => void loadLicenses()} disabled={loading}><RefreshCw className="size-4" />刷新</Button></div>
       </div>
       {error ? <div role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</div> : null}
       {notice ? <div className="rounded-lg border border-emerald-600/20 bg-emerald-600/5 p-3 text-sm text-emerald-700">{notice}</div> : null}
@@ -119,6 +157,10 @@ export function LicensesPage() {
           <div className="flex flex-col gap-2"><label className="text-sm font-medium">选择套餐</label><div className="flex flex-wrap gap-2">{plans.map((plan) => <Button key={plan.id} size="sm" variant={selectedPlanId === plan.id ? "default" : "outline"} onClick={() => setSelectedPlanId(plan.id)}>{plan.name} · {plan.currency === "CNY" ? "¥" : ""}{plan.price}{plan.currency === "USDT" ? " U" : ""}</Button>)}</div>{selectedSoftwareId && plans.length === 0 ? <p className="text-sm text-muted-foreground">该软件没有启用中的套餐，请先创建并启用套餐。</p> : null}</div>
           <form onSubmit={generate} className="flex flex-col gap-3 sm:flex-row sm:items-end"><div className="flex flex-col gap-2 sm:w-48"><label className="text-sm font-medium">生成数量</label><Input type="number" min={1} max={500} required value={quantity} onChange={(e) => setQuantity(e.target.value)} /></div><Button disabled={saving || !selectedSoftwareId || !selectedPlanId}>{saving ? <LoaderCircle className="size-4 animate-spin" /> : <KeyRound className="size-4" />}{saving ? "正在生成…" : "批量生成授权码"}</Button></form>
         </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle className="text-base">批量导入授权码</CardTitle><CardDescription>每行一个授权码，单次最多 500 个；重复或格式错误时整批回滚。</CardDescription></CardHeader>
+        <CardContent><form onSubmit={importKeys} className="flex flex-col gap-3"><label className="text-sm font-medium">授权码列表</label><textarea className="min-h-36 w-full rounded-md border bg-background p-3 font-mono text-xs" value={importText} onChange={e=>setImportText(e.target.value)} placeholder={"每行一个，例如：\\n12345678-12345678-12345678-12345678"} /><div className="flex flex-wrap items-center gap-3"><Button type="submit" disabled={saving||!selectedSoftwareId||!selectedPlanId||!importText.trim()}>{saving?<LoaderCircle className="size-4 animate-spin"/>:<Plus className="size-4"/>}导入授权码</Button><span className="text-xs text-muted-foreground">必须选择软件和套餐；导入成功后仅保存 SHA-256 摘要。</span></div></form></CardContent>
       </Card>
       <Card>
         <CardHeader><CardTitle className="text-base">授权记录</CardTitle><CardDescription>{selectedSoftware ? `${selectedSoftware.name} · 共 ${total} 条记录` : "请选择软件"}</CardDescription></CardHeader>
