@@ -119,3 +119,16 @@ jobs:
       - name: Run Go SDK tests
         run: go test ./...
         working-directory: sdk/go
+
+  java:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+      - name: Run Java SDK tests
+        run: mvn -B test
+        working-directory: sdk/java
