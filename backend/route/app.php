@@ -9,6 +9,8 @@ Route::post('api/license/activate', 'LicenseRuntime/activate')->middleware(Softw
 Route::post('api/license/verify', 'LicenseRuntime/verify')->middleware(SoftwareSignatureMiddleware::class);
 Route::post('api/license/change-device', 'LicenseRuntime/changeDevice')->middleware(SoftwareSignatureMiddleware::class);
 Route::post('api/license/unbind', 'LicenseRuntime/unbind')->middleware(SoftwareSignatureMiddleware::class);
+Route::post('api/license/offline-lease', 'LicenseRuntime/offlineLease')->middleware(SoftwareSignatureMiddleware::class);
+Route::post('api/license/platform-keys', 'LicenseRuntime/platformKeys')->middleware(SoftwareSignatureMiddleware::class);
 Route::any('api/payments/callback/:channel', 'PaymentCallback/index');
 Route::get('api/payments/cashier/:orderNo/:token', 'PaymentCashier/index');
 Route::get('api/payments/cashier/:orderNo/:token/status', 'PaymentCashier/status');
@@ -29,6 +31,11 @@ Route::get('api/payments/channels', 'PaymentOrder/channels')->middleware(AuthMid
 Route::get('api/payments/orders', 'PaymentOrder/index')->middleware(AuthMiddleware::class);
 Route::post('api/payments/orders', 'PaymentOrder/create')->middleware(AuthMiddleware::class);
 Route::post('api/auth/change-password', 'Auth/changePassword')->middleware(AuthMiddleware::class);
+
+Route::get('api/admin/platform-signing-keys', 'PlatformSigningKeys/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/admin/platform-signing-keys', 'PlatformSigningKeys/create')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::patch('api/admin/platform-signing-keys/:keyId/retire', 'PlatformSigningKeys/retire')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::patch('api/admin/platform-signing-keys/:keyId/revoke', 'PlatformSigningKeys/revoke')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 
 Route::get('api/admin/software', 'SoftwareCatalog/softwareIndex')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::post('api/admin/software', 'SoftwareCatalog/softwareCreate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
