@@ -25,6 +25,7 @@ final class OfflineLicenseToken
         string $publicKeyPem,
         string $expectedAppId,
         string $expectedFingerprintHash,
+        string $expectedKeyId,
         ?int $now = null,
     ): array {
         $parts = explode('.', $token);
@@ -44,16 +45,20 @@ final class OfflineLicenseToken
             || !is_string($payload['key_id'] ?? null)
             || !is_string($payload['app_id'] ?? null)
             || !is_string($payload['device_fingerprint_hash'] ?? null)
+            || !is_int($payload['issued_at'] ?? null)
             || !is_int($payload['not_before'] ?? null)
             || !is_int($payload['expires_at'] ?? null)) {
             throw new InvalidArgumentException('离线授权载荷字段不完整或版本不受支持。');
         }
         if (!hash_equals($expectedAppId, $payload['app_id'])
-            || !hash_equals($expectedFingerprintHash, $payload['device_fingerprint_hash'])) {
+            || !hash_equals($expectedFingerprintHash, $payload['device_fingerprint_hash'])
+            || !hash_equals($expectedKeyId, $payload['key_id'])) {
             throw new RuntimeException('离线授权凭证与当前软件或设备不匹配。');
         }
         $now ??= time();
-        if ($payload['not_before'] > $now || $payload['expires_at'] <= $now) {
+        if ($payload['issued_at'] > $now || $payload['not_before'] > $now
+            || $payload['expires_at'] <= $now || $payload['expires_at'] <= $payload['not_before']
+            || $payload['expires_at'] - $payload['issued_at'] > 90 * 86400) {
             throw new RuntimeException('离线授权凭证尚未生效或已经过期。');
         }
         try {
