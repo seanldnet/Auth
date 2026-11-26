@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace app\\controller;
+namespace app\controller;
 
-use app\\auth\\AuthContext;
-use app\\http\\RequestPayload;
-use app\\license\\AgentLicenseIssuanceService;
+use app\auth\AuthContext;
+use app\http\RequestPayload;
+use app\license\AgentLicenseIssuanceService;
 use InvalidArgumentException;
 use RuntimeException;
-use think\\Request;
-use think\\response\\Json;
+use think\Request;
+use think\response\Json;
 
 final class AgentLicenseIssuance
 {
