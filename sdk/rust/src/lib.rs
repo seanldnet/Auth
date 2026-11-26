@@ -4,9 +4,9 @@ use reqwest::blocking::Client as HttpClient;
 use reqwest::redirect::Policy;
 use rsa::pkcs8::DecodePrivateKey;
 use rsa::pss::BlindedSigningKey;
-use rsa::signature::{RandomizedSigner, SignatureEncoding, Verifier};
+use rsa::signature::{RandomizedSigner, SignatureEncoding};
 use rsa::traits::PublicKeyParts;
-use rsa::{RsaPrivateKey, RsaPublicKey};
+use rsa::RsaPrivateKey;
 use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::io::Read;
@@ -34,7 +34,7 @@ pub enum LicenseError {
     Clock,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize)]
 pub struct LicenseResult {
     pub valid: bool,
     pub status: String,
@@ -155,7 +155,7 @@ impl LicenseClient {
 
         let url = self.base_url.join(path.trim_start_matches('/'))
             .map_err(|_| LicenseError::Configuration("invalid API endpoint path".into()))?;
-        let mut response = self.http.post(url)
+        let response = self.http.post(url)
             .header("Accept", "application/json")
             .header("Content-Type", "application/json")
             .header("X-App-Id", &self.app_id)
