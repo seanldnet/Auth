@@ -36,6 +36,7 @@ const groups: { title: string; items: NavItem[] }[] = [
   { title: "安全中心", items: [
     { label: "签名密钥", to: "/security-keys", icon: ShieldCheck, roles: adminRoles },
     { label: "操作审计", to: "/audit-logs", icon: FileClock, roles: adminRoles },
+    { label: "API Key", to: "/api-keys", icon: KeyRound, roles: ["ADMIN", "AGENT", "SUB_AGENT"] },
   ]},
   { title: "开发者服务", items: [
     { label: "开发者中心", to: "/developer-center", icon: BookOpen, roles: allRoles },
