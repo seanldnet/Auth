@@ -54,7 +54,7 @@ final class LicenseRenewalService
             $previous = $license['expires_at'] !== null ? new DateTimeImmutable((string)$license['expires_at'], new DateTimeZone('UTC')) : null;
             $unit = (string)$plan['duration_unit'];
             if ($unit === 'PERMANENT') {
-                $nextExpiry = null;
+                throw new RuntimeException('永久授权无需续费。');
             } else {
                 if ($previous === null) throw new RuntimeException('永久授权无需续费，不能改为有限期限套餐。');
                 $base = $previous > $now ? $previous : $now;
