@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS auth_payment_orders (
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uk_payment_order_no (order_no),
+    UNIQUE KEY uk_payment_checkout_token (checkout_token_hash),
     UNIQUE KEY uk_payment_idempotency (user_id, idempotency_key),
     UNIQUE KEY uk_payment_provider_trade (channel_code, provider_trade_id),
     KEY idx_payment_user_created (user_id, created_at),

@@ -36,3 +36,32 @@ The payment schema and callback endpoint are a backend foundation. Channel confi
 - An ambiguous provider creation timeout moves the local order to `REVIEW`; it is not blindly retried, avoiding duplicate charges.
 
 The service and public cashier read endpoint are implemented. The authenticated order-creation controller and complete admin channel-configuration UI are intentionally gated on the platform authentication/RBAC layer; do not expose order creation without that layer.
+
+## Authentication and role foundation
+
+- Apply the auth schema after the payment schema: `mysql --default-character-set=utf8mb4 -u <user> -p <database> < database/schema/002_auth_core.sql`.
+- There is no built-in administrator or default password. Bootstrap the first administrator with process environment variables:
+  `AUTH_BOOTSTRAP_ADMIN_USERNAME=<admin-name> AUTH_BOOTSTRAP_ADMIN_PASSWORD=<random-16+-character-password> php bin/create-admin.php`.
+- The bootstrap command refuses to run if any user already exists. It marks the first account as requiring a password change.
+- Login is `POST /api/auth/login`; logout and current-user endpoints require the session middleware.
+- Sessions use 256-bit random opaque tokens in HttpOnly, SameSite=Lax cookies. Only SHA-256 token hashes are stored in MySQL; sessions expire after 12 hours.
+- Password hashes use Argon2id when available, otherwise PHP's default password algorithm. Login failures are throttled by both username and source IP; audit events are written without storing passwords or raw session tokens.
+- First login must change the bootstrap password to a new password of at least 12 characters before accessing protected routes.
+- The initial role set is ADMIN, AGENT, SUB_AGENT, USER. Admin-only API routes must use `AdminMiddleware`; do not rely on front-end visibility for authorization.
+
+Payment order creation is now available at authenticated `POST /api/payments/orders`. The public cashier read endpoint remains protected by the per-order high-entropy checkout token.
+
+## Payment channel administration
+
+- `GET /api/admin/payment-channels` lists channel status and non-secret configuration; it never returns merchant Secret values.
+- `PUT /api/admin/payment-channels/{channelCode}` is restricted to ADMIN sessions. Merchant secrets are encrypted with AES-256-GCM before persistence.
+- Supported configurable channel codes are ALIPAY, WECHAT_PAY, EPAY, EPUSDT and GMPAY. Alipay/WeChat are visible but cannot be enabled until their official adapters are implemented.
+- EPUSDT, GMPay and EPay require HTTPS API/callback URLs, a cashier hostname allow-list and an explicit provider-currency mapping for each enabled platform currency.
+- EPay with no currency override must match the gateway's configured default currency. Enabling both platform currencies with different provider currencies requires an EPay merchant API version that explicitly supports the currency parameter.
+
+## Authenticated payment order API
+
+- `POST /api/payments/orders` requires an authenticated session and an `Idempotency-Key` header (or `idempotency_key` JSON field).
+- Request JSON fields: `channel_code`, `currency` (`CNY` or `USDT`), `amount`, optional `payment_type`, and optional paired `token` + `network`.
+- The provider currency is selected from the administrator's explicit `provider_currency_by_platform_currency` map. Provider amount is exactly the same numeric amount as the platform order amount; the service performs no exchange-rate conversion.
+- The API returns an Auth `checkout_url`; the customer page then displays the validated provider cashier URL and polls the order status.

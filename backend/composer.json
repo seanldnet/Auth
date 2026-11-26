@@ -8,7 +8,8 @@
     "ext-curl": "*",
     "ext-pdo": "*",
     "ext-pdo_mysql": "*",
-    "ext-redis": "*"
+    "ext-redis": "*",
+    "ext-mbstring": "*"
   },
   "require-dev": {
     "phpunit/phpunit": "^11.5"
@@ -31,7 +32,7 @@
   },
   "scripts": {
     "test": "phpunit",
-    "check:syntax": "find app tests -name '*.php' -print0 | xargs -0 -n1 php -l"
+    "check:syntax": "find app config route public bin tests -name '*.php' -print0 | xargs -0 -n1 php -l && php -l think"
   },
   "license": "proprietary"
 }

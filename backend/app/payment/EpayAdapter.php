@@ -79,7 +79,11 @@ final class EpayAdapter implements PaymentChannelAdapter
         $parts = parse_url($paymentUrl);
         $host = strtolower((string) ($parts['host'] ?? ''));
         $allowed = array_map('strtolower', (array) ($configuration['checkout_hosts'] ?? []));
-        if (($parts['scheme'] ?? '') !== 'https' || $host === '' || !in_array($host, $allowed, true)) {
+        if (($parts['scheme'] ?? '') !== 'https'
+            || (isset($parts['port']) && (int) $parts['port'] !== 443)
+            || $host === ''
+            || !in_array($host, $allowed, true)
+        ) {
             throw new RuntimeException('EPay cashier URL failed HTTPS/host allow-list validation.');
         }
 

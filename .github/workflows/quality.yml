@@ -20,7 +20,7 @@ jobs:
         if: steps.detect.outputs.present == 'true'
         with:
           php-version: '8.2'
-          extensions: curl, pdo_mysql, redis
+          extensions: curl, pdo_mysql, redis, mbstring
           coverage: none
       - name: Install backend dependencies
         if: steps.detect.outputs.present == 'true'

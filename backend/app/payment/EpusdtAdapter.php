@@ -133,7 +133,11 @@ final class EpusdtAdapter implements PaymentChannelAdapter
         $host = strtolower((string) ($parts['host'] ?? ''));
         $allowed = array_map('strtolower', $allowedHosts);
 
-        if (($parts['scheme'] ?? '') !== 'https' || $host === '' || !in_array($host, $allowed, true)) {
+        if (($parts['scheme'] ?? '') !== 'https'
+            || (isset($parts['port']) && (int) $parts['port'] !== 443)
+            || $host === ''
+            || !in_array($host, $allowed, true)
+        ) {
             throw new RuntimeException('EPUSDT cashier URL failed HTTPS/host allow-list validation.');
         }
     }
