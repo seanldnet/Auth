@@ -42,15 +42,22 @@ final class ApiKeyMiddleware
         $scopes = is_array($scopes) ? $scopes : [];
         $path = trim((string)$request->pathinfo(), '/');
         $method = strtoupper((string)$request->method());
-        $required = match ([$path, $method]) {
-            ['api/v1/licenses', 'GET'] => 'licenses.read',
-            ['api/v1/licenses', 'POST'] => 'licenses.create',
-            ['api/v1/users', 'GET'] => 'users.read',
+        $isAdminFullScope = ($record['role'] ?? '') === 'ADMIN'
+            && in_array('*', $scopes, true)
+            && str_starts_with($path, 'api/')
+            && !str_starts_with($path, 'api/auth/');
+        $required = $isAdminFullScope ? '*' : match ([$path, $method]) {
+            ['api/licenses', 'GET'], ['api/v1/licenses', 'GET'] => 'licenses.read',
+            ['api/licenses', 'POST'], ['api/v1/licenses', 'POST'] => 'licenses.create',
+            ['api/users', 'GET'], ['api/v1/users', 'GET'] => 'users.read',
             ['api/v1/users/children', 'GET'] => 'users.children.read',
-            ['api/v1/quotas', 'GET'] => 'quotas.read',
+            ['api/license-quotas', 'GET'], ['api/v1/quotas', 'GET'] => 'quotas.read',
             default => null,
         };
-        if ($required === null && preg_match('#^api/v1/licenses/[0-9]+/renew$#', $path)) $required = 'licenses.renew';
+        if ($required === null && (preg_match('#^api/licenses/[0-9]+/renew$#', $path)
+            || preg_match('#^api/v1/licenses/[0-9]+/renew$#', $path))) {
+            $required = 'licenses.renew';
+        }
         if ($required === null || (!in_array('*', $scopes, true) && !in_array($required, $scopes, true))) {
             return json(['success' => false, 'message' => 'API Key 未授权此接口或请求方法'], 403);
         }
