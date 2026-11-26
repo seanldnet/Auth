@@ -63,6 +63,11 @@ final class LicenseRenewalService
 
             $quotaConsumed = false;
             if ((int)$plan['renew_consumes_quota'] === 1 && $actorRole !== 'ADMIN') {
+                $duplicateQuotaKey = Db::query(
+                    'SELECT id FROM auth_agent_license_quota_transactions WHERE idempotency_key = ? LIMIT 1',
+                    [$idempotencyKey],
+                );
+                if ($duplicateQuotaKey !== []) throw new RuntimeException('该幂等键已用于其他额度操作，请更换请求键。');
                 $quotaRows = Db::query(
                     'SELECT id, available_quantity, consumed_quantity
                      FROM auth_agent_license_quotas
