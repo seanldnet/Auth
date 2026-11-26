@@ -9,6 +9,7 @@ const navigation = [
   { label: "软件管理", to: "/apps", icon: AppWindow },
   { label: "授权管理", to: "/licenses", icon: KeyRound },
   { label: "用户与代理", to: "/users", icon: Users },
+  { label: "账号信息", to: "/account", icon: Users },
   { label: "账户充值", to: "/top-up", icon: Wallet },
   { label: "充值记录", to: "/payment-orders", icon: ReceiptText },
   { label: "支付渠道", to: "/payments", icon: CreditCard },
@@ -87,7 +88,7 @@ export function AdminLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-1 p-4">
-          {navigation.filter(({ to }) => user.role === "ADMIN" || (to === "/users" && ["AGENT", "SUB_AGENT"].includes(user.role)) || !["/apps", "/licenses", "/users", "/payments", "/settings"].includes(to)).map(({ label, to, icon: Icon }) => (
+          {navigation.filter(({ to }) => to === "/account" ? user.role === "USER" : user.role === "ADMIN" || (to === "/users" && ["AGENT", "SUB_AGENT"].includes(user.role)) || !["/apps", "/licenses", "/users", "/payments", "/settings"].includes(to)).map(({ label, to, icon: Icon }) => (
             <NavLink key={to} to={to} className={({ isActive }) => cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
               isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground",
