@@ -11,6 +11,7 @@ use app\payment\GmpayAdapter;
 use app\payment\PaymentChannelRegistry;
 use app\payment\PaymentCurrency;
 use app\payment\PaymentOrderService;
+use LogicException;
 use RuntimeException;
 use think\Request;
 use think\facade\Db;
@@ -32,7 +33,7 @@ final class PaymentOrder
             $code = strtoupper((string) $row['channel_code']);
             try {
                 $adapter = $registry->get($code);
-            } catch (RuntimeException) {
+            } catch (LogicException) {
                 continue;
             }
 
@@ -152,7 +153,7 @@ final class PaymentOrder
 
             unset($data['checkout_token']);
             return json(['success' => true, 'data' => $data]);
-        } catch (\ValueError|RuntimeException $exception) {
+        } catch (\LogicException|\ValueError|RuntimeException $exception) {
             return json(['success' => false, 'message' => $exception->getMessage()], 422);
         }
     }
