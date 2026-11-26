@@ -15,7 +15,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <pthread.h>
+#endif
 
 #define MAX_RESPONSE_BYTES (1024U * 1024U)
 
@@ -33,8 +37,13 @@ struct response_buffer {
     size_t capacity;
 };
 
+#ifdef _WIN32
+static INIT_ONCE crypto_once = INIT_ONCE_STATIC_INIT;
+static INIT_ONCE curl_once = INIT_ONCE_STATIC_INIT;
+#else
 static pthread_once_t crypto_once = PTHREAD_ONCE_INIT;
 static pthread_once_t curl_once = PTHREAD_ONCE_INIT;
+#endif
 static int crypto_ready = 0;
 static int curl_ready = 0;
 
@@ -45,6 +54,20 @@ static void initialize_crypto(void) {
 static void initialize_curl(void) {
     curl_ready = curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
 }
+
+#ifdef _WIN32
+static BOOL CALLBACK initialize_crypto_callback(PINIT_ONCE once, PVOID parameter, PVOID *context) {
+    (void)once; (void)parameter; (void)context; initialize_crypto(); return TRUE;
+}
+static BOOL CALLBACK initialize_curl_callback(PINIT_ONCE once, PVOID parameter, PVOID *context) {
+    (void)once; (void)parameter; (void)context; initialize_curl(); return TRUE;
+}
+static void ensure_crypto_initialized(void) { InitOnceExecuteOnce(&crypto_once, initialize_crypto_callback, NULL, NULL); }
+static void ensure_curl_initialized(void) { InitOnceExecuteOnce(&curl_once, initialize_curl_callback, NULL, NULL); }
+#else
+static void ensure_crypto_initialized(void) { ensure_crypto_initialized(); }
+static void ensure_curl_initialized(void) { ensure_curl_initialized(); }
+#endif
 
 static char *duplicate_string(const char *value) {
     if (value == NULL) return NULL;
