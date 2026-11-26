@@ -1,13 +1,14 @@
 <?php
 use app\middleware\AuthMiddleware;
 use app\middleware\AdminMiddleware;
+use app\middleware\SoftwareSignatureMiddleware;
 use think\facade\Route;
 
 Route::get('api/health', 'Health/index');
-Route::post('api/license/activate', 'LicenseRuntime/activate');
-Route::post('api/license/verify', 'LicenseRuntime/verify');
-Route::post('api/license/change-device', 'LicenseRuntime/changeDevice');
-Route::post('api/license/unbind', 'LicenseRuntime/unbind');
+Route::post('api/license/activate', 'LicenseRuntime/activate')->middleware(SoftwareSignatureMiddleware::class);
+Route::post('api/license/verify', 'LicenseRuntime/verify')->middleware(SoftwareSignatureMiddleware::class);
+Route::post('api/license/change-device', 'LicenseRuntime/changeDevice')->middleware(SoftwareSignatureMiddleware::class);
+Route::post('api/license/unbind', 'LicenseRuntime/unbind')->middleware(SoftwareSignatureMiddleware::class);
 Route::any('api/payments/callback/:channel', 'PaymentCallback/index');
 Route::get('api/payments/cashier/:orderNo/:token', 'PaymentCashier/index');
 Route::get('api/payments/cashier/:orderNo/:token/status', 'PaymentCashier/status');
@@ -33,6 +34,9 @@ Route::get('api/admin/software', 'SoftwareCatalog/softwareIndex')->middleware([A
 Route::post('api/admin/software', 'SoftwareCatalog/softwareCreate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::put('api/admin/software/:softwareId', 'SoftwareCatalog/softwareUpdate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::patch('api/admin/software/:softwareId/status', 'SoftwareCatalog/softwareStatus')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::get('api/admin/software/:softwareId/signing-keys', 'SoftwareKeys/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/admin/software/:softwareId/signing-keys', 'SoftwareKeys/add')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::patch('api/admin/software/:softwareId/signing-keys/:keyId/revoke', 'SoftwareKeys/revoke')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/software/:softwareId/plans', 'SoftwareCatalog/planIndex')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/software/:softwareId/licenses', 'LicenseManagement/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::post('api/admin/software/:softwareId/licenses', 'LicenseManagement/generate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
