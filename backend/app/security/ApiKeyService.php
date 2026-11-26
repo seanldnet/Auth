@@ -25,7 +25,12 @@ final class ApiKeyService
         $name = trim($name);
         if ($name === '' || mb_strlen($name) > 80) throw new InvalidArgumentException('密钥名称必须为 1–80 个字符。');
 
-        $allowed = $role === 'ADMIN' ? ['*', ...self::AGENT_PERMISSIONS] : self::AGENT_PERMISSIONS;
+        $allowed = match ($role) {
+            'ADMIN' => ['*', ...self::AGENT_PERMISSIONS],
+            'AGENT' => self::AGENT_PERMISSIONS,
+            'SUB_AGENT' => array_values(array_diff(self::AGENT_PERMISSIONS, ['sub_agent.read'])),
+            default => [],
+        };
         $permissions = array_values(array_unique(array_map('strval', $permissions)));
         if ($permissions === []) $permissions = $role === 'ADMIN' ? ['*'] : self::AGENT_PERMISSIONS;
         foreach ($permissions as $permission) {
