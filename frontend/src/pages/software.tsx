@@ -200,7 +200,7 @@ export function SoftwarePage() {
                 <div className="flex flex-wrap items-center justify-between gap-2"><span className="font-medium">{item.name}</span><Badge variant={item.status === "ACTIVE" ? "success" : "outline"}>{item.status === "ACTIVE" ? "运行中" : item.status === "DISABLED" ? "已停用" : "已归档"}</Badge></div>
                 <code className="text-xs text-muted-foreground">{item.app_id}</code>
                 <span className="text-xs text-muted-foreground">{item.plan_count} 个套餐 · 离线 {item.offline_days} 天 · 创建于 {item.created_at}</span>
-              </button>
+              </Button>
             ))}
           </CardContent>
         </Card>
