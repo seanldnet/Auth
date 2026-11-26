@@ -45,7 +45,7 @@ The service and public cashier read endpoint are implemented. The authenticated 
 - The bootstrap command refuses to run if any user already exists. It marks the first account as requiring a password change.
 - Login is `POST /api/auth/login`; logout and current-user endpoints require the session middleware.
 - Sessions use 256-bit random opaque tokens in HttpOnly, SameSite=Lax cookies. Only SHA-256 token hashes are stored in MySQL; sessions expire after 12 hours.
-- Password hashes use Argon2id when available, otherwise PHP's default password algorithm. Login failures are throttled per username/IP pair; audit events are written without storing passwords or raw session tokens.
+- Password hashes use Argon2id when available, otherwise PHP's default password algorithm. Login failures are throttled by both username and source IP; audit events are written without storing passwords or raw session tokens.
 - First login must change the bootstrap password to a new password of at least 12 characters before accessing protected routes.
 - The initial role set is ADMIN, AGENT, SUB_AGENT, USER. Admin-only API routes must use `AdminMiddleware`; do not rely on front-end visibility for authorization.
 
