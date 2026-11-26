@@ -17,6 +17,8 @@ export default function App() {
       <Route element={<AdminLayout />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/payments" element={<PaymentsPage />} />
+        <Route path="/top-up" element={<TopUpPage />} />
+        <Route path="/payment-orders" element={<PaymentOrdersPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
