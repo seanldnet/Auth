@@ -15,6 +15,7 @@
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
 #include <openssl/err.h>
+#include <openssl/provider.h>
 #include <openssl/sha.h>
 
 namespace auth_license {
@@ -24,6 +25,9 @@ constexpr std::size_t kMaxResponseBytes = 1024 * 1024;
 void ensure_curl_initialized() {
     static std::once_flag once;
     std::call_once(once, [] {
+        if (OSSL_PROVIDER_load(nullptr, "default") == nullptr) {
+            throw std::runtime_error(openssl_error_message("Unable to load OpenSSL default provider"));
+        }
         if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
             throw std::runtime_error("Unable to initialize libcurl");
         }
