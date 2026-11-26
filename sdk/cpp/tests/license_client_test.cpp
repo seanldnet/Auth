@@ -5,12 +5,14 @@
 #include <openssl/rsa.h>
 #include <openssl/sha.h>
 
+#define CHECK(condition) do { if (!(condition)) { std::cerr << "check failed: " << #condition << std::endl; return 1; } } while (false)
+
 int main() {
     const std::string body = R"({"app_id":"app_123"})";
     const auto canonical = auth_license::LicenseClient::build_canonical_message(
         "post", "/api/license/verify", "1795700000",
         "0123456789abcdef0123456789abcdef", body);
-    assert(canonical.rfind("POST\n/api/license/verify\n1795700000\n0123456789abcdef0123456789abcdef\n", 0) == 0);
+    CHECK(canonical.rfind("POST\n/api/license/verify\n1795700000\n0123456789abcdef0123456789abcdef\n", 0) == 0);
 
     bool rejected_query = false;
     try {
