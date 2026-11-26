@@ -65,8 +65,8 @@ static BOOL CALLBACK initialize_curl_callback(PINIT_ONCE once, PVOID parameter, 
 static void ensure_crypto_initialized(void) { InitOnceExecuteOnce(&crypto_once, initialize_crypto_callback, NULL, NULL); }
 static void ensure_curl_initialized(void) { InitOnceExecuteOnce(&curl_once, initialize_curl_callback, NULL, NULL); }
 #else
-static void ensure_crypto_initialized(void) { ensure_crypto_initialized(); }
-static void ensure_curl_initialized(void) { ensure_curl_initialized(); }
+static void ensure_crypto_initialized(void) { pthread_once(&crypto_once, initialize_crypto); }
+static void ensure_curl_initialized(void) { pthread_once(&curl_once, initialize_curl); }
 #endif
 
 static char *duplicate_string(const char *value) {
