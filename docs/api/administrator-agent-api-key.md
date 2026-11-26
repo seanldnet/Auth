@@ -54,4 +54,8 @@ LOWERCASE_HEX_SHA256_OF_EXACT_BODY_BYTES
 
 API Key 管理接口通过现有登录会话保护。请求认证中间件 `ApiKeyMiddleware` 已实现签名、时间窗、IP 白名单、账号/Key 状态和 Nonce 唯一性校验，并将权限写入请求上下文。
 
-业务 API 的授权/用户路由仍需逐项接入该中间件，并在 Service 层检查权限及资源归属；在这些业务路由接入前，不得宣称第三方 API 调用闭环已完成。
+已接入的签名业务查询路由：
+- `GET /api/v1/users`：要求 `user.read`，复用用户管理 Service 的角色及数据范围过滤。
+- `GET /api/v1/sub-agents`：要求 `sub_agent.read`，仅管理员/代理可用，并复用下级数据范围过滤。
+
+授权开通/更换/查询路由尚未接入。必须先完成额度账本及授权资源归属校验，再接入 `license.create`、`license.replace`、`license.read`；不得绕过额度扣减直接创建授权。
