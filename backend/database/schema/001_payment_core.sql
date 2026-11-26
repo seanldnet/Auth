@@ -1,5 +1,5 @@
 -- MySQL 8.0+ payment core. Apply once per regional database.
--- Platform CNY and USDT wallets remain isolated; no FX/rate fields are stored.
+-- Each user has one numeric wallet balance. Currency/unit is a global display preference only.
 
 CREATE TABLE IF NOT EXISTS auth_payment_channels (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -49,18 +49,16 @@ CREATE TABLE IF NOT EXISTS auth_payment_orders (
 CREATE TABLE IF NOT EXISTS auth_wallet_accounts (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     user_id BIGINT UNSIGNED NOT NULL,
-    currency ENUM('CNY','USDT') NOT NULL,
     balance DECIMAL(26,8) NOT NULL DEFAULT 0,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
-    UNIQUE KEY uk_wallet_user_currency (user_id, currency)
+    UNIQUE KEY uk_wallet_user (user_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS auth_wallet_transactions (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     user_id BIGINT UNSIGNED NOT NULL,
-    currency ENUM('CNY','USDT') NOT NULL,
     direction ENUM('CREDIT','DEBIT','REVERSAL') NOT NULL,
     amount DECIMAL(26,8) NOT NULL,
     balance_before DECIMAL(26,8) NOT NULL,
@@ -90,3 +88,15 @@ CREATE TABLE IF NOT EXISTS auth_payment_callback_events (
     UNIQUE KEY uk_payment_callback_event (channel_code, event_key),
     KEY idx_callback_order (order_no, received_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+CREATE TABLE IF NOT EXISTS auth_system_settings (
+    setting_key VARCHAR(80) NOT NULL,
+    setting_value VARCHAR(255) NOT NULL,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    PRIMARY KEY (setting_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO auth_system_settings (setting_key, setting_value)
+VALUES ('wallet_display_unit', 'CNY')
+ON DUPLICATE KEY UPDATE setting_key = VALUES(setting_key);
