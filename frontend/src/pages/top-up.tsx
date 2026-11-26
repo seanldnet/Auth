@@ -20,6 +20,7 @@ export function TopUpPage() {
   const [currency, setCurrency] = useState<Currency>("CNY");
   const [channelCode, setChannelCode] = useState("");
   const [amount, setAmount] = useState("");
+  const [idempotencyKey, setIdempotencyKey] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -79,13 +80,15 @@ export function TopUpPage() {
 
     setSubmitting(true);
     try {
+      const requestKey = idempotencyKey || crypto.randomUUID().replaceAll("-", "");
+      setIdempotencyKey(requestKey);
       const response = await fetch("/api/payments/orders", {
         method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          "Idempotency-Key": crypto.randomUUID().replaceAll("-", ""),
+          "Idempotency-Key": requestKey,
         },
         body: JSON.stringify({
           channel_code: channelCode,
@@ -124,14 +127,14 @@ export function TopUpPage() {
               <CardDescription>两种币种独立余额、独立订单。</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <Button type="button" size="lg" variant={currency === "CNY" ? "default" : "outline"} className="h-14 justify-start gap-3" onClick={() => setCurrency("CNY")}>
+              <Button type="button" size="lg" variant={currency === "CNY" ? "default" : "outline"} className="h-14 justify-start gap-3" onClick={() => { setCurrency("CNY"); setIdempotencyKey(""); }}>
                 <span className="text-xl">¥</span>
                 <span className="flex flex-col items-start gap-0.5">
                   <span>人民币 CNY</span>
                   <span className="text-xs opacity-75">独立人民币账户</span>
                 </span>
               </Button>
-              <Button type="button" size="lg" variant={currency === "USDT" ? "default" : "outline"} className="h-14 justify-start gap-3" onClick={() => setCurrency("USDT")}>
+              <Button type="button" size="lg" variant={currency === "USDT" ? "default" : "outline"} className="h-14 justify-start gap-3" onClick={() => { setCurrency("USDT"); setIdempotencyKey(""); }}>
                 <span className="text-xl">U</span>
                 <span className="flex flex-col items-start gap-0.5">
                   <span>USDT</span>
@@ -160,7 +163,7 @@ export function TopUpPage() {
                     <button
                       key={channel.channel_code}
                       type="button"
-                      onClick={() => setChannelCode(channel.channel_code)}
+                      onClick={() => { setChannelCode(channel.channel_code); setIdempotencyKey(""); }}
                       className={"flex min-h-20 items-center justify-between gap-3 rounded-lg border p-4 text-left transition-colors " + (channelCode === channel.channel_code ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/60")}
                     >
                       <span className="flex flex-col gap-1">
@@ -191,7 +194,7 @@ export function TopUpPage() {
                   min="0"
                   step={amountStep}
                   value={amount}
-                  onChange={(event) => setAmount(event.target.value)}
+                  onChange={(event) => { setAmount(event.target.value); setIdempotencyKey(""); }}
                   className="h-12 pl-9 text-lg tabular-nums"
                   placeholder={currency === "CNY" ? "请输入人民币金额" : "请输入 USDT 数量"}
                   required
