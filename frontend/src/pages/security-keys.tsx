@@ -3,7 +3,6 @@ import { KeyRound, LoaderCircle, Plus, RefreshCw, ShieldAlert } from "lucide-rea
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 type Software={id:number;name:string;status:string};type SigningKey={key_id:string;fingerprint:string;status:string;created_at:string;revoked_at:string|null};
 async function api<T>(url:string,init?:RequestInit):Promise<T>{const r=await fetch(url,{credentials:"include",headers:{Accept:"application/json","Content-Type":"application/json"},...init});const j=await r.json();if(!r.ok||!j.success)throw new Error(j.message||"请求失败");return j.data as T;}
 export function SecurityKeysPage(){const [apps,setApps]=useState<Software[]>([]);const [softwareId,setSoftwareId]=useState("");const [keys,setKeys]=useState<SigningKey[]>([]);const [pem,setPem]=useState("");const [loading,setLoading]=useState(true);const [saving,setSaving]=useState(false);const [error,setError]=useState("");const [notice,setNotice]=useState("");
