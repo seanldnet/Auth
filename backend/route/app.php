@@ -23,6 +23,7 @@ Route::get('api/v1/users', 'ApiV1/users')->middleware(ApiKeyMiddleware::class);
 Route::get('api/v1/users/children', 'ApiV1/users')->middleware(ApiKeyMiddleware::class);
 Route::get('api/v1/quotas', 'ApiV1/quotas')->middleware(ApiKeyMiddleware::class);
 
+Route::get('api/wallet', 'Wallet/index')->middleware(AuthMiddleware::class);
 Route::get('api/notifications', 'Notifications/index')->middleware(AuthMiddleware::class);
 Route::patch('api/notifications/:notificationId/read', 'Notifications/read')->middleware(AuthMiddleware::class);
 Route::patch('api/notifications/read-all', 'Notifications/readAll')->middleware(AuthMiddleware::class);
