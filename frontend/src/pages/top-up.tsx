@@ -54,6 +54,7 @@ export function TopUpPage() {
   }, [availableChannels, channelCode]);
 
   const currencySymbol = currency === "CNY" ? "¥" : "U";
+  const displayAmount = currency === "CNY" ? "¥" + (amount || "0.00") : (amount || "0") + " U";
   const amountStep = currency === "CNY" ? "0.01" : "0.00000001";
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -214,7 +215,7 @@ export function TopUpPage() {
             <CardContent className="flex flex-col gap-5">
               <div className="flex flex-col gap-2 rounded-xl bg-muted/60 p-5">
                 <p className="text-sm text-muted-foreground">本次应付</p>
-                <p className="text-3xl font-semibold tabular-nums">{currencySymbol}{amount || "0.00"}{currency === "USDT" ? " U" : ""}</p>
+                <p className="text-3xl font-semibold tabular-nums">{displayAmount}</p>
                 <Badge variant="outline" className="w-fit">{currency}</Badge>
               </div>
               <div className="flex flex-col gap-2 text-sm">
