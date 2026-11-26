@@ -89,7 +89,7 @@ final class OfflineLicenseLeaseService
             (string)$platformKey['public_key_pem'],
             $payloadJson,
         );
-        $token = $this->base64UrlEncode($payloadJson) . '.' . $this->base64UrlEncode($signature);
+        $token = OfflineLicenseToken::encode($payloadJson, $signature);
         $tokenHash = hash('sha256', $token);
 
         Db::transaction(function () use (
