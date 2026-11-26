@@ -23,7 +23,7 @@ final class SoftwareSignatureMiddleware
 
         if (!preg_match('/^app_[a-f0-9]{24}$/i', $appId)
             || !preg_match('/^key_[a-f0-9]{16}$/', $keyId)
-            || !preg_match('/^[0-9]{10}$/', $timestamp)
+            || !preg_match('/^[0-9]{10,11}$/', $timestamp)
             || !preg_match('/^[A-Za-z0-9_-]{16,64}$/', $nonce)
             || $signatureHeader === ''
         ) {
