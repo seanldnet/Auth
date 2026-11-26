@@ -12,8 +12,14 @@ import { LicensesPage } from "@/pages/licenses";
 import { UsersPage } from "@/pages/users";
 import { RegisterPage } from "@/pages/register";
 import { AccountPage } from "@/pages/account";
-import { QuotasPage } from "@/pages/quotas";
 import { SettingsPage } from "@/pages/settings";
+import { QuotasPage } from "@/pages/quotas";
+import { AgentLicensesPage } from "@/pages/agent-licenses";
+import { AgentQuotasPage } from "@/pages/agent-quotas";
+import { SecurityKeysPage } from "@/pages/security-keys";
+import { AuditLogsPage } from "@/pages/audit-logs";
+import { DeveloperCenterPage } from "@/pages/developer-center";
+import { MonitoringPage } from "@/pages/monitoring";
 
 export default function App() {
   return (
@@ -26,12 +32,18 @@ export default function App() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/apps" element={<SoftwarePage />} />
         <Route path="/licenses" element={<LicensesPage />} />
+        <Route path="/agent/licenses" element={<AgentLicensesPage />} />
         <Route path="/quotas" element={<QuotasPage />} />
+        <Route path="/agent/quotas" element={<AgentQuotasPage />} />
         <Route path="/users" element={<UsersPage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/payments" element={<PaymentsPage />} />
         <Route path="/top-up" element={<TopUpPage />} />
         <Route path="/payment-orders" element={<PaymentOrdersPage />} />
+        <Route path="/security-keys" element={<SecurityKeysPage />} />
+        <Route path="/audit-logs" element={<AuditLogsPage />} />
+        <Route path="/developer-center" element={<DeveloperCenterPage />} />
+        <Route path="/monitoring" element={<MonitoringPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
