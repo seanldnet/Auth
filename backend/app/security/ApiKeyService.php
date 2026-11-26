@@ -10,7 +10,7 @@ use think\facade\Db;
 
 final class ApiKeyService
 {
-    private const AGENT_SCOPES = ['licenses.create', 'licenses.read', 'users.read', 'users.children.read', 'quotas.read'];
+    private const AGENT_SCOPES = ['licenses.create', 'licenses.read', 'licenses.renew', 'users.read', 'users.children.read', 'quotas.read'];
 
     /** @return array<string,mixed> */
     public function create(int $ownerId, string $name, array $requestedScopes, array $ipAllowlist, ?string $expiresAt): array
