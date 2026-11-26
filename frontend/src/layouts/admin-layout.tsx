@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Activity, AppWindow, CreditCard, KeyRound, LayoutDashboard, LogOut, Settings, Users, LoaderCircle, Wallet, ReceiptText } from "lucide-react";
+import { Activity, AppWindow, CreditCard, KeyRound, LayoutDashboard, LogOut, Settings, Users, LoaderCircle, Wallet, ReceiptText, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -8,6 +8,7 @@ const navigation = [
   { label: "总览", to: "/", icon: LayoutDashboard },
   { label: "软件管理", to: "/apps", icon: AppWindow },
   { label: "授权管理", to: "/licenses", icon: KeyRound },
+  { label: "额度管理", to: "/quotas", icon: Layers },
   { label: "用户与代理", to: "/users", icon: Users },
   { label: "账号信息", to: "/account", icon: Users },
   { label: "账户充值", to: "/top-up", icon: Wallet },
@@ -88,7 +89,7 @@ export function AdminLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-1 p-4">
-          {navigation.filter(({ to }) => to === "/account" ? user.role === "USER" : user.role === "ADMIN" || (to === "/users" && ["AGENT", "SUB_AGENT"].includes(user.role)) || !["/apps", "/licenses", "/users", "/payments", "/settings"].includes(to)).map(({ label, to, icon: Icon }) => (
+          {navigation.filter(({ to }) => to === "/account" ? user.role === "USER" : user.role === "ADMIN" || (to === "/users" && ["AGENT", "SUB_AGENT"].includes(user.role)) || !["/apps", "/licenses", "/quotas", "/users", "/payments", "/settings"].includes(to)).map(({ label, to, icon: Icon }) => (
             <NavLink key={to} to={to} className={({ isActive }) => cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
               isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground",
