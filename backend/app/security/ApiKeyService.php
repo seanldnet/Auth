@@ -52,20 +52,23 @@ final class ApiKeyService
 
         $plain = 'ak_' . bin2hex(random_bytes(32));
         $prefix = substr($plain, 0, 15);
-        Db::execute(
-            'INSERT INTO auth_api_keys
-             (owner_user_id, key_name, key_prefix, key_hash, scopes, ip_allowlist, expires_at, created_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
-            [$ownerId, $name, $prefix, hash('sha256', $plain),
-             json_encode($scopes, JSON_THROW_ON_ERROR), $ips === [] ? null : json_encode($ips, JSON_THROW_ON_ERROR), $expiry],
-        );
-        $id = (int)Db::getLastInsID();
-        Db::execute(
-            'INSERT INTO auth_audit_logs (actor_user_id, event_type, target_type, target_id, metadata, created_at)
-             VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())',
-            [$ownerId, 'API_KEY_CREATED', 'API_KEY', (string)$id,
-             json_encode(['name' => $name, 'scopes' => $scopes, 'ip_allowlist_count' => count($ips)], JSON_THROW_ON_ERROR)],
-        );
+        $id = Db::transaction(function () use ($ownerId, $name, $prefix, $plain, $scopes, $ips, $expiry): int {
+            Db::execute(
+                'INSERT INTO auth_api_keys
+                 (owner_user_id, key_name, key_prefix, key_hash, scopes, ip_allowlist, expires_at, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
+                [$ownerId, $name, $prefix, hash('sha256', $plain),
+                 json_encode($scopes, JSON_THROW_ON_ERROR), $ips === [] ? null : json_encode($ips, JSON_THROW_ON_ERROR), $expiry],
+            );
+            $id = (int)Db::getLastInsID();
+            Db::execute(
+                'INSERT INTO auth_audit_logs (actor_user_id, event_type, target_type, target_id, metadata, created_at)
+                 VALUES (?, ?, ?, ?, ?, UTC_TIMESTAMP())',
+                [$ownerId, 'API_KEY_CREATED', 'API_KEY', (string)$id,
+                 json_encode(['name' => $name, 'scopes' => $scopes, 'ip_allowlist_count' => count($ips)], JSON_THROW_ON_ERROR)],
+            );
+            return $id;
+        });
         return ['id' => $id, 'name' => $name, 'key_prefix' => $prefix, 'scopes' => $scopes, 'ip_allowlist' => $ips, 'expires_at' => $expiry, 'api_key' => $plain];
     }
 
@@ -90,15 +93,17 @@ final class ApiKeyService
         $admin = ($actor['role'] ?? '') === 'ADMIN';
         $where = $admin ? 'id = ?' : 'id = ? AND owner_user_id = ?';
         $params = $admin ? [$keyId] : [$keyId, (int)$actor['id']];
-        $rows = Db::query("SELECT id, revoked_at FROM auth_api_keys WHERE {$where} LIMIT 1 FOR UPDATE", $params);
-        $key = $rows[0] ?? null;
-        if (!is_array($key)) throw new RuntimeException('API Key 不存在或无权操作。');
-        if ($key['revoked_at'] !== null) throw new RuntimeException('该 API Key 已撤销。');
-        Db::execute('UPDATE auth_api_keys SET revoked_at = UTC_TIMESTAMP() WHERE id = ?', [$keyId]);
-        Db::execute(
-            'INSERT INTO auth_audit_logs (actor_user_id, event_type, target_type, target_id, created_at)
-             VALUES (?, ?, ?, ?, UTC_TIMESTAMP())',
-            [(int)$actor['id'], 'API_KEY_REVOKED', 'API_KEY', (string)$keyId],
-        );
+        Db::transaction(function () use ($where, $params, $keyId, $actor): void {
+            $rows = Db::query("SELECT id, revoked_at FROM auth_api_keys WHERE {$where} LIMIT 1 FOR UPDATE", $params);
+            $key = $rows[0] ?? null;
+            if (!is_array($key)) throw new RuntimeException('API Key 不存在或无权操作。');
+            if ($key['revoked_at'] !== null) throw new RuntimeException('该 API Key 已撤销。');
+            Db::execute('UPDATE auth_api_keys SET revoked_at = UTC_TIMESTAMP() WHERE id = ?', [$keyId]);
+            Db::execute(
+                'INSERT INTO auth_audit_logs (actor_user_id, event_type, target_type, target_id, created_at)
+                 VALUES (?, ?, ?, ?, UTC_TIMESTAMP())',
+                [(int)$actor['id'], 'API_KEY_REVOKED', 'API_KEY', (string)$keyId],
+            );
+        });
     }
 }
