@@ -94,3 +94,17 @@ jobs:
       - name: Explain skipped .NET checks
         if: steps.detect.outputs.present != 'true'
         run: echo ".NET SDK project not present in this change; checks will run when sdk/csharp/ is introduced."
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python SDK and test dependencies
+        run: python -m pip install -e ".[test]"
+        working-directory: sdk/python
+      - name: Run Python SDK tests
+        run: python -m pytest tests
+        working-directory: sdk/python
