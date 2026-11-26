@@ -190,7 +190,7 @@ auth_license_client *auth_license_client_new(const char *base_url, const char *a
         set_error(error_message, "A private key and timeout between 1 and 120 seconds are required.");
         return NULL;
     }
-    pthread_once(&crypto_once, initialize_crypto);
+    ensure_crypto_initialized();
     ensure_curl_initialized();
     if (!crypto_ready || !curl_ready) {
         set_error(error_message, "Unable to initialize OpenSSL or libcurl.");
