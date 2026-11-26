@@ -14,6 +14,7 @@
 #include <openssl/pem.h>
 #include <openssl/rand.h>
 #include <openssl/rsa.h>
+#include <openssl/err.h>
 #include <openssl/sha.h>
 
 namespace auth_license {
@@ -56,7 +57,15 @@ std::size_t append_response(char* data, std::size_t size, std::size_t count, voi
 }
 
 std::string openssl_error_message(const char* fallback) {
-    return fallback;
+    const unsigned long code = ERR_get_error();
+    if (code == 0) return fallback;
+    char buffer[256]{};
+    ERR_error_string_n(code, buffer, sizeof(buffer));
+    return std::string(fallback) + ": " + buffer;
+}
+
+void require_openssl(int result, const char* operation) {
+    if (result <= 0) throw std::runtime_error(openssl_error_message(operation));
 }
 } // namespace
 
@@ -116,18 +125,14 @@ std::string LicenseClient::sign_rsa_pss_sha256(EVP_PKEY* private_key, const std:
     std::size_t signature_size = 0;
     std::vector<unsigned char> signature;
     try {
-        if (EVP_DigestSignInit(digest_context, &key_context, EVP_sha256(), nullptr, private_key) <= 0
-            || EVP_PKEY_CTX_set_rsa_padding(key_context, RSA_PKCS1_PSS_PADDING) <= 0
-            || EVP_PKEY_CTX_set_rsa_mgf1_md(key_context, EVP_sha256()) <= 0
-            || EVP_PKEY_CTX_set_rsa_pss_saltlen(key_context, 32) <= 0
-            || EVP_DigestSignUpdate(digest_context, message.data(), message.size()) <= 0
-            || EVP_DigestSignFinal(digest_context, nullptr, &signature_size) <= 0) {
-            throw std::runtime_error("Unable to initialize RSA-PSS signing");
-        }
+        require_openssl(EVP_DigestSignInit(digest_context, &key_context, EVP_sha256(), nullptr, private_key), "RSA-PSS init failed");
+        require_openssl(EVP_PKEY_CTX_set_rsa_padding(key_context, RSA_PKCS1_PSS_PADDING), "RSA-PSS padding setup failed");
+        require_openssl(EVP_PKEY_CTX_set_rsa_mgf1_md(key_context, EVP_sha256()), "RSA-PSS MGF1 setup failed");
+        require_openssl(EVP_PKEY_CTX_set_rsa_pss_saltlen(key_context, 32), "RSA-PSS salt length setup failed");
+        require_openssl(EVP_DigestSignUpdate(digest_context, message.data(), message.size()), "RSA-PSS message update failed");
+        require_openssl(EVP_DigestSignFinal(digest_context, nullptr, &signature_size), "RSA-PSS signature sizing failed");
         signature.resize(signature_size);
-        if (EVP_DigestSignFinal(digest_context, signature.data(), &signature_size) <= 0) {
-            throw std::runtime_error("RSA-PSS signing failed");
-        }
+        require_openssl(EVP_DigestSignFinal(digest_context, signature.data(), &signature_size), "RSA-PSS signing failed");
         signature.resize(signature_size);
     } catch (...) {
         EVP_MD_CTX_free(digest_context);
