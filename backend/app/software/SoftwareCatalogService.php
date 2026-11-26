@@ -184,7 +184,7 @@ final class SoftwareCatalogService
     /** @return array<string,mixed> */
     private function findSoftware(int $id): array
     {
-        $rows = Db::query('SELECT * FROM auth_software_apps WHERE id = ? LIMIT 1', [$id]);
+        $rows = Db::query('SELECT id, app_id, name, description, status, renew_consumes_quota, offline_days, created_by, created_at, updated_at, archived_at FROM auth_software_apps WHERE id = ? LIMIT 1', [$id]);
         if (!isset($rows[0])) {
             throw new RuntimeException('软件不存在。');
         }
