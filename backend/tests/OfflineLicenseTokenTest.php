@@ -53,7 +53,7 @@ final class OfflineLicenseTokenTest extends TestCase
         $payload = json_encode([
             'version' => 1, 'app_id' => 'app_0123456789abcdef01234567',
             'device_fingerprint_hash' => hash('sha256', 'device-fingerprint'),
-            'not_before' => 1800000000, 'expires_at' => 1800003600,
+            'issued_at' => 1800000000, 'not_before' => 1800000000, 'expires_at' => 1800003600,
             'key_id' => 'pkey_0123456789abcdef', 'algorithm' => 'RSA-PSS-SHA256',
         ], JSON_THROW_ON_ERROR);
         $signature = $private->withHash('sha256')->withPadding(RSA::SIGNATURE_PSS)
@@ -75,7 +75,7 @@ final class OfflineLicenseTokenTest extends TestCase
         $payload = json_encode([
             'version' => 1, 'app_id' => 'app_0123456789abcdef01234567',
             'device_fingerprint_hash' => hash('sha256', 'device-a'),
-            'not_before' => 1800000000, 'expires_at' => 1800003600,
+            'issued_at' => 1800000000, 'not_before' => 1800000000, 'expires_at' => 1800003600,
             'key_id' => 'pkey_0123456789abcdef', 'algorithm' => 'RSA-PSS-SHA256',
         ], JSON_THROW_ON_ERROR);
         $signature = $private->withHash('sha256')->withPadding(RSA::SIGNATURE_PSS)
