@@ -119,28 +119,30 @@ std::string LicenseClient::build_canonical_message(const std::string& method, co
 }
 
 std::string LicenseClient::sign_rsa_pss_sha256(EVP_PKEY* private_key, const std::string& message) {
-    EVP_MD_CTX* digest_context = EVP_MD_CTX_new();
-    if (digest_context == nullptr) throw std::runtime_error("Unable to allocate OpenSSL digest context");
-    EVP_PKEY_CTX* key_context = nullptr;
+    unsigned char digest[SHA256_DIGEST_LENGTH];
+    SHA256(reinterpret_cast<const unsigned char*>(message.data()), message.size(), digest);
+
+    EVP_PKEY_CTX* context = EVP_PKEY_CTX_new_from_pkey(nullptr, private_key, nullptr);
+    if (context == nullptr) throw std::runtime_error(openssl_error_message("Unable to allocate RSA-PSS context"));
     std::size_t signature_size = 0;
     std::vector<unsigned char> signature;
     try {
-        require_openssl(EVP_DigestSignInit(digest_context, &key_context, EVP_sha256(), nullptr, private_key), "RSA-PSS init failed");
-        require_openssl(EVP_PKEY_CTX_set_rsa_padding(key_context, RSA_PKCS1_PSS_PADDING), "RSA-PSS padding setup failed");
-        require_openssl(EVP_PKEY_CTX_set_rsa_mgf1_md(key_context, EVP_sha256()), "RSA-PSS MGF1 setup failed");
-        require_openssl(EVP_PKEY_CTX_set_rsa_pss_saltlen(key_context, 32), "RSA-PSS salt length setup failed");
-        require_openssl(EVP_DigestSignUpdate(digest_context, message.data(), message.size()), "RSA-PSS message update failed");
-        require_openssl(EVP_DigestSignFinal(digest_context, nullptr, &signature_size), "RSA-PSS signature sizing failed");
+        require_openssl(EVP_PKEY_sign_init(context), "RSA-PSS sign init failed");
+        require_openssl(EVP_PKEY_CTX_set_rsa_padding(context, RSA_PKCS1_PSS_PADDING), "RSA-PSS padding setup failed");
+        require_openssl(EVP_PKEY_CTX_set_signature_md(context, EVP_sha256()), "RSA-PSS digest setup failed");
+        require_openssl(EVP_PKEY_CTX_set_rsa_mgf1_md(context, EVP_sha256()), "RSA-PSS MGF1 setup failed");
+        require_openssl(EVP_PKEY_CTX_set_rsa_pss_saltlen(context, 32), "RSA-PSS salt length setup failed");
+        require_openssl(EVP_PKEY_sign(context, nullptr, &signature_size, digest, sizeof(digest)), "RSA-PSS signature sizing failed");
         signature.resize(signature_size);
-        require_openssl(EVP_DigestSignFinal(digest_context, signature.data(), &signature_size), "RSA-PSS signing failed");
+        require_openssl(EVP_PKEY_sign(context, signature.data(), &signature_size, digest, sizeof(digest)), "RSA-PSS signing failed");
         signature.resize(signature_size);
     } catch (...) {
-        EVP_MD_CTX_free(digest_context);
+        EVP_PKEY_CTX_free(context);
         throw;
     }
-    EVP_MD_CTX_free(digest_context);
+    EVP_PKEY_CTX_free(context);
 
-    std::string encoded(4 * ((signature.size() + 2) / 3), '\0');
+    std::string encoded(4 * ((signature.size() + 2) / 3), '\\0');
     const int encoded_size = EVP_EncodeBlock(reinterpret_cast<unsigned char*>(encoded.data()),
                                              signature.data(), static_cast<int>(signature.size()));
     if (encoded_size < 0) throw std::runtime_error("Unable to Base64-encode RSA-PSS signature");
