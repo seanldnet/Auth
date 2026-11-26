@@ -86,14 +86,13 @@ final class PaymentCallbackProcessor
                 throw new RuntimeException('Callback currency differs from the immutable provider order snapshot.');
             }
 
-            $currency = PaymentCurrency::from((string) $order['currency']);
             $walletRows = Db::query(
-                'SELECT * FROM auth_wallet_accounts WHERE user_id = ? AND currency = ? LIMIT 1 FOR UPDATE',
-                [(int) $order['user_id'], $currency->value],
+                'SELECT * FROM auth_wallet_accounts WHERE user_id = ? LIMIT 1 FOR UPDATE',
+                [(int) $order['user_id']],
             );
             $wallet = $walletRows[0] ?? null;
             if (!is_array($wallet)) {
-                throw new RuntimeException('Wallet account is not initialized for the payment currency.');
+                throw new RuntimeException('Wallet account is not initialized.');
             }
 
             $ledgerKey = 'payment:' . (int) $order['id'];
@@ -126,11 +125,10 @@ final class PaymentCallbackProcessor
 
             Db::execute(
                 'INSERT INTO auth_wallet_transactions
-                    (user_id, currency, direction, amount, balance_before, balance_after, business_type, business_id, idempotency_key, description, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
+                    (user_id, direction, amount, balance_before, balance_after, business_type, business_id, idempotency_key, description, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())',
                 [
                     (int) $order['user_id'],
-                    $currency->value,
                     'CREDIT',
                     $credit,
                     $before,
