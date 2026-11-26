@@ -5,7 +5,6 @@ namespace app\controller;
 
 use app\auth\AuthContext;
 use app\http\RequestPayload;
-use InvalidArgumentException;
 use think\Request;
 use think\facade\Db;
 use think\response\Json;
@@ -37,7 +36,7 @@ final class WalletSettings
         $payload = RequestPayload::all($request);
         $unit = strtoupper(trim((string) ($payload['wallet_display_unit'] ?? '')));
         if (!in_array($unit, ['CNY', 'U'], true)) {
-            throw new InvalidArgumentException('显示单位只能设置为人民币或 U。');
+            return json(['success' => false, 'message' => '显示单位只能设置为人民币或 U。'], 422);
         }
 
         Db::execute(
