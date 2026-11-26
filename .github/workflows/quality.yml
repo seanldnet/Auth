@@ -214,3 +214,19 @@ jobs:
       - name: Build Rust SDK release
         run: cargo build --release
         working-directory: sdk/rust
+
+  kotlin-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Install Gradle 8.12
+        run: |
+          curl -fsSL https://services.gradle.org/distributions/gradle-8.12-bin.zip -o /tmp/gradle.zip
+          unzip -q /tmp/gradle.zip -d /tmp
+      - name: Run Kotlin SDK tests
+        run: /tmp/gradle-8.12/bin/gradle --no-daemon test
+        working-directory: sdk/kotlin
