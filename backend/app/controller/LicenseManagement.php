@@ -55,6 +55,24 @@ final class LicenseManagement
         }
     }
 
+    public function unbindDevice(Request $request, string $licenseId): Json
+    {
+        $user = AuthContext::get($request);
+        if ($user === null || ($user['role'] ?? '') !== 'ADMIN') {
+            return json(['success' => false, 'message' => '需要管理员权限'], 403);
+        }
+        try {
+            $license = (new LicenseManagementService())->unbindDevice(
+                (int)$licenseId, (int)$user['id'], (string)$request->ip(),
+                (string)$request->header('user-agent', ''),
+            );
+            return json(['success' => true, 'data' => $license]);
+        } catch (RuntimeException $exception) {
+            $status = str_contains($exception->getMessage(), '不存在') ? 404 : 422;
+            return json(['success' => false, 'message' => $exception->getMessage()], $status);
+        }
+    }
+
     public function status(Request $request, string $licenseId): Json
     {
         $user = AuthContext::get($request);
