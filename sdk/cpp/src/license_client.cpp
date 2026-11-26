@@ -123,6 +123,7 @@ std::string LicenseClient::build_canonical_message(const std::string& method, co
 }
 
 std::string LicenseClient::sign_rsa_pss_sha256(EVP_PKEY* private_key, const std::string& message) {
+    ensure_default_provider();
     unsigned char digest[SHA256_DIGEST_LENGTH];
     SHA256(reinterpret_cast<const unsigned char*>(message.data()), message.size(), digest);
 
