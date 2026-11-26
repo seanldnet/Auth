@@ -25,6 +25,9 @@ final class LicenseRuntimeService
             if ($license['status'] === 'VOID') throw new RuntimeException('授权已作废。');
             if ($license['status'] === 'EXPIRED') throw new RuntimeException('授权已过期。');
             if ($license['status'] === 'ACTIVE') {
+                if ($this->expireIfNeeded($license, $ip, $agent)) {
+                    return ['valid' => false, 'status' => 'EXPIRED', 'message' => '授权已过期'];
+                }
                 if (hash_equals((string)$license['device_fingerprint_hash'], $fingerprintHash)) {
                     return $this->runtimeResult($license, true);
                 }
@@ -69,10 +72,8 @@ final class LicenseRuntimeService
             if (!is_array($license)) throw new RuntimeException('授权码无效。');
             if ($license['status'] !== 'ACTIVE') throw new RuntimeException($this->statusMessage((string)$license['status']));
             if (!hash_equals((string)$license['device_fingerprint_hash'], $fingerprintHash)) throw new RuntimeException('设备指纹不匹配。');
-            if ($license['expires_at'] !== null && strtotime((string)$license['expires_at'] . ' UTC') <= time()) {
-                Db::execute("UPDATE auth_licenses SET status = 'EXPIRED', updated_at = UTC_TIMESTAMP() WHERE id = ?", [(int)$license['id']]);
-                $this->event((int)$license['id'], 'LICENSE_EXPIRED', ['status' => 'ACTIVE'], ['status' => 'EXPIRED'], $ip, $agent);
-                throw new RuntimeException('授权已过期。');
+            if ($this->expireIfNeeded($license, $ip, $agent)) {
+                return ['valid' => false, 'status' => 'EXPIRED', 'message' => '授权已过期'];
             }
             Db::execute('UPDATE auth_licenses SET last_verified_at = UTC_TIMESTAMP(), updated_at = UTC_TIMESTAMP() WHERE id = ?', [(int)$license['id']]);
             return $this->runtimeResult($license, true);
@@ -92,7 +93,7 @@ final class LicenseRuntimeService
             $license = $rows[0] ?? null;
             if (!is_array($license) || $license['status'] !== 'ACTIVE') throw new RuntimeException('授权不存在或当前不可换机。');
             if (!hash_equals((string)$license['device_fingerprint_hash'], $currentHash)) throw new RuntimeException('当前设备指纹不匹配，不能换机。');
-            $this->assertNotExpired($license);
+            if ($this->expireIfNeeded($license, $ip, $agent)) return ['valid' => false, 'status' => 'EXPIRED', 'message' => '授权已过期'];
             Db::execute(
                 'UPDATE auth_licenses SET device_fingerprint_hash = ?, device_label = ?,
                  machine_change_count = machine_change_count + 1, updated_at = UTC_TIMESTAMP() WHERE id = ?',
@@ -166,27 +167,32 @@ final class LicenseRuntimeService
     {
         if ($unit === 'PERMANENT') return null;
         if ($value === null || $value < 1 || $value > 1200) throw new RuntimeException('授权套餐时长配置异常。');
-        $modifier = match ($unit) {
-            'DAY' => '+' . $value . ' days',
-            'MONTH' => '+' . $value . ' months',
-            'YEAR' => '+' . $value . ' years',
+        if ($unit === 'DAY') return $start->modify('+' . $value . ' days');
+        $months = match ($unit) {
+            'MONTH' => $value,
+            'YEAR' => $value * 12,
             default => throw new RuntimeException('授权套餐时长单位无效。'),
         };
-        return $start->modify($modifier);
+        $target = $start->modify('first day of this month')->modify('+' . $months . ' months');
+        $day = min((int)$start->format('d'), (int)$target->format('t'));
+        return $target->setDate((int)$target->format('Y'), (int)$target->format('m'), $day)
+            ->setTime((int)$start->format('H'), (int)$start->format('i'), (int)$start->format('s'));
     }
 
     /** @param array<string,mixed> $license */
-    private function assertNotExpired(array $license): void
+    private function expireIfNeeded(array $license, string $ip, string $agent): bool
     {
-        if ($license['expires_at'] !== null && strtotime((string)$license['expires_at'] . ' UTC') <= time()) {
-            throw new RuntimeException('授权已过期。');
-        }
+        if ($license['expires_at'] === null || strtotime((string)$license['expires_at'] . ' UTC') > time()) return false;
+        Db::execute("UPDATE auth_licenses SET status = 'EXPIRED', updated_at = UTC_TIMESTAMP() WHERE id = ?", [(int)$license['id']]);
+        $this->event((int)$license['id'], 'LICENSE_EXPIRED', ['status' => 'ACTIVE'], ['status' => 'EXPIRED'], $ip, $agent);
+        return true;
     }
 
     /** @param array<string,mixed> $license @return array<string,mixed> */
     private function runtimeResult(array $license, bool $idempotent): array
     {
         return [
+            'valid' => true,
             'license_no' => (string)$license['license_no'],
             'status' => (string)$license['status'],
             'activated_at' => $license['activated_at'],
