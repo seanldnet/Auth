@@ -64,6 +64,82 @@ final class LicenseManagementService
         return ['licenses' => $created, 'quantity' => count($created)];
     }
 
+    /** @return array{imported:int,licenses:list<array{id:int,license_no:string,license_key_hint:string}>} */
+    public function import(int $softwareId, int $planId, array $licenseKeys, int $actorId, string $ip, string $userAgent): array
+    {
+        if ($softwareId < 1 || $planId < 1 || $licenseKeys === [] || count($licenseKeys) > 500) {
+            throw new InvalidArgumentException('软件、套餐或导入数量无效；单次最多导入 500 个授权码。');
+        }
+        $software = Db::query('SELECT id, status FROM auth_software_apps WHERE id = ? LIMIT 1', [$softwareId]);
+        if (!isset($software[0]) || $software[0]['status'] !== 'ACTIVE') {
+            throw new RuntimeException('软件不存在或当前未启用。');
+        }
+        $plan = Db::query(
+            "SELECT id FROM auth_license_plans WHERE id = ? AND software_id = ? AND status = 'ACTIVE' LIMIT 1",
+            [$planId, $softwareId],
+        );
+        if (!isset($plan[0])) throw new InvalidArgumentException('套餐不存在、未启用或不属于所选软件。');
+
+        $normalized = [];
+        foreach ($licenseKeys as $value) {
+            $key = strtoupper(trim((string)$value));
+            if (!preg_match('/^[A-F0-9]{8}(?:-[A-F0-9]{8}){3}$/', $key)) {
+                throw new InvalidArgumentException('导入授权码格式无效，必须为 4 组、每组 8 位十六进制字符。');
+            }
+            $hash = hash('sha256', $key);
+            if (isset($normalized[$hash])) throw new InvalidArgumentException('导入列表中存在重复授权码。');
+            $normalized[$hash] = $key;
+        }
+
+        $created = [];
+        Db::transaction(function () use ($softwareId, $planId, $normalized, $actorId, $ip, $userAgent, &$created): void {
+            foreach ($normalized as $hash => $key) {
+                $exists = Db::query('SELECT id FROM auth_licenses WHERE license_key_hash = ? LIMIT 1', [$hash]);
+                if ($exists !== []) throw new InvalidArgumentException('授权码已存在，导入已整体取消。');
+                $licenseNo = 'LIC-' . strtoupper(bin2hex(random_bytes(6)));
+                $hint = substr($key, 0, 4) . '...' . substr($key, -4);
+                Db::execute(
+                    'INSERT INTO auth_licenses
+                     (license_no, license_key_hash, license_key_hint, software_id, plan_id,
+                      issued_by_user_id, status, created_at, updated_at)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP(), UTC_TIMESTAMP())',
+                    [$licenseNo, $hash, $hint, $softwareId, $planId, $actorId, 'GENERATED'],
+                );
+                $id = (int)Db::getLastInsID();
+                $created[] = ['id' => $id, 'license_no' => $licenseNo, 'license_key_hint' => $hint];
+                $this->event($id, $actorId, 'LICENSE_IMPORTED', null, [
+                    'software_id' => $softwareId, 'plan_id' => $planId, 'status' => 'GENERATED',
+                ], $ip, $userAgent);
+            }
+        });
+        return ['imported' => count($created), 'licenses' => $created];
+    }
+
+    /** @return string */
+    public function exportCsv(int $softwareId, string $status = '', string $keyword = ''): string
+    {
+        $result = $this->list($softwareId, 1, 100, $status, $keyword);
+        $all = $result['items'];
+        while (count($all) < $result['total']) {
+            $next = $this->list($softwareId, (int)floor(count($all) / 100) + 1, 100, $status, $keyword);
+            if ($next['items'] === []) break;
+            array_push($all, ...$next['items']);
+        }
+        $stream = fopen('php://temp', 'r+');
+        if ($stream === false) throw new RuntimeException('无法创建导出缓冲区。');
+        fputcsv($stream, ['授权编号', '授权提示', '套餐', '状态', '设备', '激活时间', '到期时间', '创建时间']);
+        foreach ($all as $row) {
+            fputcsv($stream, [
+                $row['license_no'], $row['license_key_hint'], $row['plan_name'], $row['status'],
+                $row['device_label'], $row['activated_at'], $row['expires_at'], $row['created_at'],
+            ]);
+        }
+        rewind($stream);
+        $csv = (string)stream_get_contents($stream);
+        fclose($stream);
+        return "\xEF\xBB\xBF" . $csv;
+    }
+
     /** @return array{items:list<array<string,mixed>>,page:int,page_size:int,total:int} */
     public function list(int $softwareId, int $page, int $pageSize, string $status = '', string $keyword = ''): array
     {
