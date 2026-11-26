@@ -41,7 +41,7 @@ final class UserTransferService
             if (!is_array($user) || $user['role'] !== 'USER' || $user['status'] !== 'ACTIVE') {
                 throw new RuntimeException('用户不存在或账号不可申请变更。');
             }
-            if ($targetId === $userId || ($targetId !== null && $targetId === (int)$user['parent_id'])) {
+            if ($targetId === $userId || $targetId === ($user['parent_id'] === null ? null : (int)$user['parent_id'])) {
                 throw new InvalidArgumentException('目标归属与当前归属相同。');
             }
             if ($targetId !== null) $this->assertActiveTarget($targetId);
