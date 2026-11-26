@@ -136,7 +136,7 @@ std::string LicenseClient::sign_rsa_pss_sha256(EVP_PKEY* private_key, const std:
     unsigned char digest[SHA256_DIGEST_LENGTH];
     SHA256(reinterpret_cast<const unsigned char*>(message.data()), message.size(), digest);
 
-    EVP_PKEY_CTX* context = EVP_PKEY_CTX_new_from_pkey(nullptr, private_key, nullptr);
+    EVP_PKEY_CTX* context = EVP_PKEY_CTX_new(private_key, nullptr);
     if (context == nullptr) throw std::runtime_error(openssl_error_message("Unable to allocate RSA-PSS context"));
     std::size_t signature_size = 0;
     std::vector<unsigned char> signature;
