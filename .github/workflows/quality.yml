@@ -76,3 +76,14 @@ jobs:
       - name: Explain skipped frontend checks
         if: steps.detect.outputs.present != 'true'
         run: echo "Frontend project not present in this change; checks will run when frontend/ is introduced."
+
+  dotnet:
+    if: ${{ hashFiles('sdk/csharp/**/*.csproj') != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Run .NET SDK tests
+        run: dotnet test sdk/csharp/Auth.LicenseSdk.Tests/Auth.LicenseSdk.Tests.csproj --configuration Release
