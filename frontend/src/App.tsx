@@ -5,6 +5,8 @@ import { PaymentsPage } from "@/pages/payments";
 import { AdminLayout } from "@/layouts/admin-layout";
 import { CheckoutPage } from "@/pages/checkout";
 import { ChangePasswordPage } from "@/pages/change-password";
+import { TopUpPage } from "@/pages/top-up";
+import { PaymentOrdersPage } from "@/pages/payment-orders";
 
 export default function App() {
   return (
