@@ -140,7 +140,7 @@ export function PaymentOrdersPage() {
               );
             })
           )}
-          {role === "ADMIN" ? <div className="flex items-center justify-between border-t pt-4 text-sm text-muted-foreground"><span>第 {page} 页 · 共 {total} 笔</span><div className="flex gap-2"><Button size="sm" variant="outline" disabled={page<=1||loading} onClick={()=>setPage(p=>p-1)}>上一页</Button><Button size="sm" variant="outline" disabled={items.length<20||loading} onClick={()=>setPage(p=>p+1)}>下一页</Button></div></div> : null}
+          {role === "ADMIN" ? <div className="flex items-center justify-between border-t pt-4 text-sm text-muted-foreground"><span>第 {page} 页 · 共 {total} 笔</span><div className="flex gap-2"><Button size="sm" variant="outline" disabled={page<=1||loading} onClick={()=>setPage(p=>p-1)}>上一页</Button><Button size="sm" variant="outline" disabled={page*20>=total||loading} onClick={()=>setPage(p=>p+1)}>下一页</Button></div></div> : null}
         </CardContent>
       </Card>
     </section>
