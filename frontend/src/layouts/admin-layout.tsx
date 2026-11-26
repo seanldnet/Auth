@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  Activity, AppWindow, BookOpen, CreditCard, FileClock, KeyRound, LayoutDashboard,
+  Activity, AppWindow, BookOpen, CreditCard, FileClock, Globe2, KeyRound, LayoutDashboard,
   Layers, LogOut, Menu, Settings, ShieldCheck, Users, LoaderCircle, Wallet, ReceiptText, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -41,6 +41,7 @@ const groups: { title: string; items: NavItem[] }[] = [
     { label: "开发者中心", to: "/developer-center", icon: BookOpen, roles: allRoles },
   ]},
   { title: "系统管理", items: [
+    { label: "区域节点", to: "/regions", icon: Globe2, roles: adminRoles },
     { label: "系统监控", to: "/monitoring", icon: Activity, roles: adminRoles },
     { label: "系统设置", to: "/settings", icon: Settings, roles: adminRoles },
   ]},
