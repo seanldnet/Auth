@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AlertCircle, LoaderCircle, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -99,6 +99,9 @@ export function LoginPage() {
               {submitting ? "正在登录…" : "登录"}
             </Button>
 
+            <p className="text-center text-sm text-muted-foreground">
+              还没有账号？<Link className="font-medium text-primary hover:underline" to="/register">立即注册</Link>
+            </p>
             <p className="text-center text-xs leading-5 text-muted-foreground">
               登录会话使用 HttpOnly Cookie 保存；不会将会话密钥写入浏览器本地存储。
             </p>
