@@ -5,6 +5,8 @@ import { PaymentsPage } from "@/pages/payments";
 import { AdminLayout } from "@/layouts/admin-layout";
 import { CheckoutPage } from "@/pages/checkout";
 import { ChangePasswordPage } from "@/pages/change-password";
+import { TopUpPage } from "@/pages/top-up";
+import { PaymentOrdersPage } from "@/pages/payment-orders";
 
 export default function App() {
   return (
@@ -15,6 +17,8 @@ export default function App() {
       <Route element={<AdminLayout />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/payments" element={<PaymentsPage />} />
+        <Route path="/top-up" element={<TopUpPage />} />
+        <Route path="/payment-orders" element={<PaymentOrdersPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
