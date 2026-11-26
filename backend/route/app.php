@@ -2,6 +2,7 @@
 use app\middleware\AuthMiddleware;
 use app\middleware\AdminMiddleware;
 use app\middleware\SoftwareSignatureMiddleware;
+use app\middleware\ApiKeyMiddleware;
 use think\facade\Route;
 
 Route::get('api/health', 'Health/index');
@@ -16,11 +17,11 @@ Route::get('api/payments/cashier/:orderNo/:token/status', 'PaymentCashier/status
 Route::get('api/keys', 'ApiKeys/index')->middleware(AuthMiddleware::class);
 Route::post('api/keys', 'ApiKeys/create')->middleware(AuthMiddleware::class);
 Route::delete('api/keys/:keyId', 'ApiKeys/revoke')->middleware(AuthMiddleware::class);
-Route::get('api/v1/licenses', 'ApiV1/licenses')->middleware(\\app\\middleware\\ApiKeyMiddleware::class);
-Route::post('api/v1/licenses', 'ApiV1/licenses')->middleware(\\app\\middleware\\ApiKeyMiddleware::class);
-Route::get('api/v1/users', 'ApiV1/users')->middleware(\\app\\middleware\\ApiKeyMiddleware::class);
-Route::get('api/v1/users/children', 'ApiV1/users')->middleware(\\app\\middleware\\ApiKeyMiddleware::class);
-Route::get('api/v1/quotas', 'ApiV1/quotas')->middleware(\\app\\middleware\\ApiKeyMiddleware::class);
+Route::get('api/v1/licenses', 'ApiV1/licenses')->middleware(ApiKeyMiddleware::class);
+Route::post('api/v1/licenses', 'ApiV1/licenses')->middleware(ApiKeyMiddleware::class);
+Route::get('api/v1/users', 'ApiV1/users')->middleware(ApiKeyMiddleware::class);
+Route::get('api/v1/users/children', 'ApiV1/users')->middleware(ApiKeyMiddleware::class);
+Route::get('api/v1/quotas', 'ApiV1/quotas')->middleware(ApiKeyMiddleware::class);
 
 Route::post('api/auth/login', 'Auth/login');
 Route::post('api/auth/register', 'UserManagement/register');
