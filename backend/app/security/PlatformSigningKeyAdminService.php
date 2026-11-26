@@ -35,7 +35,9 @@ final class PlatformSigningKeyAdminService
         if (!preg_match('/^pkey_[a-f0-9]{16}$/', $keyId)) {
             throw new InvalidArgumentException('平台 Key ID 必须为 pkey_ 加 16 位小写十六进制字符。');
         }
-        if ($publicKeyPem === '' || strlen($publicKeyPem) > 20000) {
+        if ($publicKeyPem === '' || strlen($publicKeyPem) > 20000
+            || (!str_contains($publicKeyPem, '-----BEGIN PUBLIC KEY-----')
+                && !str_contains($publicKeyPem, '-----BEGIN RSA PUBLIC KEY-----'))) {
             throw new InvalidArgumentException('平台 RSA 公钥 PEM 不能为空且不能超过 20 KB。');
         }
         if ($keyReference === '' || strlen($keyReference) > 255
