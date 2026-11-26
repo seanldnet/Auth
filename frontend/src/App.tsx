@@ -21,6 +21,7 @@ import { AuditLogsPage } from "@/pages/audit-logs";
 import { DeveloperCenterPage } from "@/pages/developer-center";
 import { MonitoringPage } from "@/pages/monitoring";
 import { RegionsPage } from "@/pages/regions";
+import { ApiKeysPage } from "@/pages/api-keys";
 
 export default function App() {
   return (
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="/top-up" element={<TopUpPage />} />
         <Route path="/payment-orders" element={<PaymentOrdersPage />} />
         <Route path="/security-keys" element={<SecurityKeysPage />} />
+        <Route path="/api-keys" element={<ApiKeysPage />} />
         <Route path="/audit-logs" element={<AuditLogsPage />} />
         <Route path="/developer-center" element={<DeveloperCenterPage />} />
         <Route path="/monitoring" element={<MonitoringPage />} />
