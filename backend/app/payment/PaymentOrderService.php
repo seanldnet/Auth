@@ -262,6 +262,27 @@ final class PaymentOrderService
         }
     }
 
+
+    public function checkoutUrlForUser(int $userId, string $orderNo): ?string
+    {
+        $rows = Db::query(
+            'SELECT order_no, idempotency_key, checkout_token_hash, status
+             FROM auth_payment_orders WHERE order_no = ? AND user_id = ? LIMIT 1',
+            [$orderNo, $userId],
+        );
+        $order = $rows[0] ?? null;
+        if (!is_array($order) || !in_array((string) $order['status'], ['CREATING', 'PENDING'], true)) {
+            return null;
+        }
+
+        $token = self::checkoutToken($userId, (string) $order['order_no'], (string) $order['idempotency_key']);
+        if (!hash_equals((string) $order['checkout_token_hash'], hash('sha256', $token))) {
+            throw new RuntimeException('Unable to verify the cashier token for this order.');
+        }
+
+        return '/checkout/' . rawurlencode((string) $order['order_no']) . '/' . rawurlencode($token);
+    }
+
     /**
      * Public cashier data is protected by a 256-bit opaque token.
      *
