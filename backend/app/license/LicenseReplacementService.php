@@ -92,7 +92,7 @@ final class LicenseReplacementService
         if (!isset($issuer[0]) || !in_array($issuer[0]['role'], ['AGENT','SUB_AGENT'], true)) return;
 
         $rows = Db::query(
-            "SELECT COUNT(*) AS aggregate FROM auth_agent_license_quota_transactions
+            "SELECT COALESCE(SUM(quantity), 0) AS aggregate FROM auth_agent_license_quota_transactions
              WHERE business_id = ? AND direction = 'CONSUME'
                AND business_type IN ('LICENSE_ISSUE','LICENSE_RENEWAL','LICENSE_REPLACEMENT_IN')",
             [(int)$old['id']],
