@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace app\\license;
+namespace app\license;
 
 use InvalidArgumentException;
 use RuntimeException;
-use think\\facade\\Db;
+use think\facade\Db;
 
 final class AgentLicenseIssuanceService
 {
