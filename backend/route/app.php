@@ -30,6 +30,9 @@ Route::get('api/users', 'UserManagement/index')->middleware(AuthMiddleware::clas
 Route::get('api/license-quotas/:quotaId/transactions', 'AgentLicenseQuota/transactions')->middleware(AuthMiddleware::class);
 Route::get('api/license-quotas', 'AgentLicenseQuota/index')->middleware(AuthMiddleware::class);
 Route::post('api/admin/license-quotas', 'AgentLicenseQuota/allocate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/licenses/:licenseId/renew', 'LicenseRenewal/renew')->middleware(AuthMiddleware::class);
+Route::post('api/admin/licenses/:licenseId/renew', 'LicenseRenewal/renew')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/v1/licenses/:licenseId/renew', 'LicenseRenewal/renew')->middleware(ApiKeyMiddleware::class);
 Route::get('api/licenses', 'AgentLicenseIssuance/index')->middleware(AuthMiddleware::class);
 Route::post('api/licenses', 'AgentLicenseIssuance/create')->middleware(AuthMiddleware::class);
 Route::post('api/users', 'UserManagement/create')->middleware(AuthMiddleware::class);
