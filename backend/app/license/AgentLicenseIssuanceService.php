@@ -130,7 +130,7 @@ final class AgentLicenseIssuanceService
                      VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
                     [(int)$quota['id'], $actorId, $softwareId, $planId, 'CONSUME',
                      $availableBefore, $availableAfter, $actorId, 'LICENSE_ISSUE',
-                     (int)$license['id'], hash('sha256', $idempotencyKey . ':' . (int)$license['id']),
+                     (int)$license['id'], $index === 0 ? $idempotencyKey : hash('sha256', $idempotencyKey . ':' . (int)$license['id']),
                      '代理生成授权码 ' . $license['license_no']],
                 );
             }
