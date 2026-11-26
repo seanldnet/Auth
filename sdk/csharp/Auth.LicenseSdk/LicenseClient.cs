@@ -122,28 +122,24 @@ public sealed class LicenseClient : IDisposable
         [property: JsonPropertyName("app_id")] string AppId,
         [property: JsonPropertyName("license_key")] string LicenseKey,
         [property: JsonPropertyName("device_fingerprint")] string DeviceFingerprint,
-        [property: JsonPropertyName("device_label")] string? DeviceLabel)
-    );
+        [property: JsonPropertyName("device_label")] string? DeviceLabel);
 
     private sealed record VerifyRequest(
         [property: JsonPropertyName("app_id")] string AppId,
         [property: JsonPropertyName("license_key")] string LicenseKey,
-        [property: JsonPropertyName("device_fingerprint")] string DeviceFingerprint)
-    );
+        [property: JsonPropertyName("device_fingerprint")] string DeviceFingerprint);
 
     private sealed record ChangeDeviceRequest(
         [property: JsonPropertyName("app_id")] string AppId,
         [property: JsonPropertyName("license_key")] string LicenseKey,
         [property: JsonPropertyName("current_device_fingerprint")] string CurrentDeviceFingerprint,
         [property: JsonPropertyName("new_device_fingerprint")] string NewDeviceFingerprint,
-        [property: JsonPropertyName("device_label")] string? DeviceLabel)
-    );
+        [property: JsonPropertyName("device_label")] string? DeviceLabel);
 
     private sealed record UnbindRequest(
         [property: JsonPropertyName("app_id")] string AppId,
         [property: JsonPropertyName("license_key")] string LicenseKey,
-        [property: JsonPropertyName("device_fingerprint")] string DeviceFingerprint)
-    );
+        [property: JsonPropertyName("device_fingerprint")] string DeviceFingerprint);
 }
 
 /// <summary>Represents a failed or rejected license API response.</summary>
