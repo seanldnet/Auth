@@ -22,9 +22,6 @@ final class SoftwareSignatureVerifier
     {
         try {
             $key = PublicKeyLoader::load($publicKeyPem);
-            if (!$key instanceof \phpseclib3\Crypt\PublicKeyLoader) {
-                // PublicKeyLoader returns a key object; this branch is intentionally not used for type narrowing.
-            }
             return $key
                 ->withHash('sha256')
                 ->withPadding(RSA::SIGNATURE_PSS)
