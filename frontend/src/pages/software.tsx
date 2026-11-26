@@ -16,6 +16,7 @@ type Plan = {
   price: string; currency: "CNY" | "USDT"; status: "ACTIVE" | "DISABLED";
   description: string | null;
 };
+type SoftwareKey = { key_id:string; fingerprint:string; status:"ACTIVE"|"REVOKED"; created_at:string; revoked_at:string|null };
 type PlanForm = {
   name: string; plan_code: string; duration_unit: Plan["duration_unit"];
   duration_value: string; price: string; currency: Plan["currency"];
@@ -41,6 +42,9 @@ export function SoftwarePage() {
   const [software, setSoftware] = useState<Software[]>([]);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [plans, setPlans] = useState<Plan[]>([]);
+  const [signingKeys, setSigningKeys] = useState<SoftwareKey[]>([]);
+  const [keyPem, setKeyPem] = useState("");
+  const [keyFileName, setKeyFileName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -80,11 +84,16 @@ export function SoftwarePage() {
     }
   }, []);
 
+  const loadSigningKeys = useCallback(async (id:number) => {
+    try { setSigningKeys(await api<SoftwareKey[]>("/api/admin/software/" + id + "/signing-keys")); }
+    catch (cause) { setError(cause instanceof Error ? cause.message : "读取签名公钥失败"); setSigningKeys([]); }
+  }, []);
+
   useEffect(() => { void loadSoftware(); }, [loadSoftware]);
   useEffect(() => {
-    if (selectedId) void loadPlans(selectedId);
-    else setPlans([]);
-  }, [selectedId, loadPlans]);
+    if (selectedId) { void loadPlans(selectedId); void loadSigningKeys(selectedId); }
+    else { setPlans([]); setSigningKeys([]); }
+  }, [selectedId, loadPlans, loadSigningKeys]);
 
   useEffect(() => {
     if (selected) {
@@ -133,6 +142,29 @@ export function SoftwarePage() {
       setSoftware((rows) => rows.map((row) => row.id === item.id ? { ...row, ...updated } : row));
       setNotice(status === "ACTIVE" ? "软件已启用" : "软件已停用");
     } catch (cause) { setError(cause instanceof Error ? cause.message : "状态更新失败"); }
+  }
+
+  async function uploadSigningKey() {
+    if (!selectedId || !keyPem.trim()) return;
+    setSaving(true); setError(""); setNotice("");
+    try {
+      const result = await api<{key_id:string;fingerprint:string}>("/api/admin/software/" + selectedId + "/signing-keys", {
+        method:"POST", body:JSON.stringify({public_key_pem:keyPem}),
+      });
+      setKeyPem(""); setKeyFileName("");
+      setNotice("RSA 公钥已添加：" + result.key_id + "。请在客户端配置对应私钥和 Key ID。");
+      await loadSigningKeys(selectedId);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "上传公钥失败"); }
+    finally { setSaving(false); }
+  }
+
+  async function revokeSigningKey(key:SoftwareKey) {
+    if (!selectedId) return;
+    try {
+      await api("/api/admin/software/" + selectedId + "/signing-keys/" + key.key_id + "/revoke",{method:"PATCH"});
+      setNotice("签名公钥 " + key.key_id + " 已撤销，使用该密钥的请求将立即失效。");
+      await loadSigningKeys(selectedId);
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "撤销公钥失败"); }
   }
 
   function startEditPlan(plan: Plan) {
@@ -228,6 +260,16 @@ export function SoftwarePage() {
         </Card>
       </div>
 
+      {selected && selected.status !== "ARCHIVED" ? (
+        <Card>
+          <CardHeader><CardTitle className="flex items-center gap-2 text-base"><ShieldCheck className="size-4"/>客户端 RSA-PSS 签名公钥</CardTitle><CardDescription>上传开发者生成的 RSA-3072 或更高强度公钥。最多同时保留 2 把有效密钥，便于轮换期间新旧密钥短期并行；私钥必须保存在客户端安全位置，切勿上传。</CardDescription></CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2"><label className="text-sm font-medium">选择 PEM 公钥文件</label><Input type="file" accept=".pem,.pub,text/plain" onChange={(event)=>{const file=event.target.files?.[0];if(!file)return;setKeyFileName(file.name);const reader=new FileReader();reader.onload=()=>setKeyPem(String(reader.result||""));reader.onerror=()=>setError("读取公钥文件失败");reader.readAsText(file);}}/><p className="text-xs text-muted-foreground">{keyFileName ? "已读取：" + keyFileName : "仅接受 PEM 格式公钥文件，不要上传私钥文件。"}</p></div>
+            <Button className="self-start" disabled={saving||!keyPem.trim()||signingKeys.filter(key=>key.status==="ACTIVE").length>=2} onClick={()=>void uploadSigningKey()}>{saving?<LoaderCircle className="size-4 animate-spin"/>:<Plus className="size-4"/>}添加签名公钥</Button>
+            <div className="flex flex-col gap-2">{signingKeys.length===0?<div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">尚未配置客户端签名公钥；配置前授权运行 API 将拒绝请求。</div>:signingKeys.map(key=><div key={key.key_id} className="flex flex-col gap-2 rounded-lg border p-3 sm:flex-row sm:items-center sm:justify-between"><div className="flex min-w-0 flex-col gap-1"><div className="flex flex-wrap items-center gap-2"><code className="text-sm">{key.key_id}</code><Badge variant={key.status==="ACTIVE"?"success":"outline"}>{key.status==="ACTIVE"?"有效":"已撤销"}</Badge></div><span className="break-all text-xs text-muted-foreground">SHA-256：{key.fingerprint}</span><span className="text-xs text-muted-foreground">创建于 {key.created_at}{key.revoked_at ? " · 撤销于 " + key.revoked_at : ""}</span></div>{key.status==="ACTIVE"?<Button size="sm" variant="outline" onClick={()=>void revokeSigningKey(key)}>撤销密钥</Button>:null}</div>)}</div>
+          </CardContent>
+        </Card>
+      ) : null}
       {selected && selected.status !== "ARCHIVED" ? (
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><PackagePlus className="size-4" />{selected.name} · 套餐管理</CardTitle><CardDescription>套餐只在所属软件内有效。永久套餐不设置到期时间。</CardDescription></CardHeader>
