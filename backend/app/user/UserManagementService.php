@@ -65,11 +65,21 @@ final class UserManagementService
         if ($actorRole === 'ADMIN') {
             if ($poolOnly) $where[] = 'u.parent_id IS NULL AND u.role = \'USER\'';
         } elseif ($actorRole === 'AGENT') {
-            $where[] = "u.id IN (WITH RECURSIVE descendants AS (
-                SELECT id FROM auth_users WHERE parent_id = ?
-                UNION ALL SELECT child.id FROM auth_users child INNER JOIN descendants d ON child.parent_id = d.id
-            ) SELECT id FROM descendants)";
-            $params[] = (int)$actor['id'];
+            $descendants = Db::query(
+                'WITH RECURSIVE descendants AS (
+                    SELECT id FROM auth_users WHERE parent_id = ?
+                    UNION ALL
+                    SELECT child.id FROM auth_users child INNER JOIN descendants d ON child.parent_id = d.id
+                ) SELECT id FROM descendants',
+                [(int)$actor['id']],
+            );
+            $ids = array_map(static fn(array $row): int => (int)$row['id'], $descendants);
+            if ($ids === []) {
+                $where[] = '1 = 0';
+            } else {
+                $where[] = 'u.id IN (' . implode(',', array_fill(0, count($ids), '?')) . ')';
+                array_push($params, ...$ids);
+            }
             if ($poolOnly) throw new RuntimeException('只有管理员可以查看公共用户池。');
         } else {
             $where[] = 'u.parent_id = ?';
