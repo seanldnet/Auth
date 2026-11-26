@@ -234,7 +234,7 @@ final class LicenseManagementService
     }
 
     /**
-     * Refunds exactly one consumed quota unit when an agent-issued license is voided.
+     * Refunds all issue, renewal, and replacement quota units when an agent-issued license is voided.
      * The unique ledger key makes this operation idempotent and the surrounding
      * license-status transaction keeps the license and quota reversal atomic.
      *
@@ -300,7 +300,7 @@ final class LicenseManagementService
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
             [(int)$quota['id'], $issuerId, (int)$license['software_id'], (int)$license['plan_id'],
              'REVERSAL', $refundQuantity, $availableBefore, $availableAfter, $actorId, 'LICENSE_VOID',
-             $licenseId, $reversalKey, '授权作废，退回签发及续费额度'],
+             $licenseId, $reversalKey, '授权作废，退回签发、续费及更换占用额度'],
         );
     }
 
