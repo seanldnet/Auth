@@ -78,12 +78,19 @@ jobs:
         run: echo "Frontend project not present in this change; checks will run when frontend/ is introduced."
 
   dotnet:
-    if: ${{ hashFiles('sdk/csharp/**/*.csproj') != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Detect .NET SDK project
+        id: detect
+        run: echo "present=$([ -f sdk/csharp/Auth.LicenseSdk.Tests/Auth.LicenseSdk.Tests.csproj ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-dotnet@v4
+        if: steps.detect.outputs.present == 'true'
         with:
           dotnet-version: '8.0.x'
       - name: Run .NET SDK tests
+        if: steps.detect.outputs.present == 'true'
         run: dotnet test sdk/csharp/Auth.LicenseSdk.Tests/Auth.LicenseSdk.Tests.csproj --configuration Release
+      - name: Explain skipped .NET checks
+        if: steps.detect.outputs.present != 'true'
+        run: echo ".NET SDK project not present in this change; checks will run when sdk/csharp/ is introduced."
