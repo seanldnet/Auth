@@ -28,7 +28,9 @@ final class LicenseClient
             throw new InvalidArgumentException('A valid signing Key ID is required.');
         }
         $parts = parse_url($baseUrl);
-        if (!is_array($parts) || ($parts['scheme'] ?? '') !== 'https' || empty($parts['host'])) {
+        if (!is_array($parts) || ($parts['scheme'] ?? '') !== 'https' || empty($parts['host'])
+            || !in_array($parts['path'] ?? '', ['', '/'], true)
+            || isset($parts['query']) || isset($parts['fragment']) || isset($parts['user']) || isset($parts['pass'])) {
             throw new InvalidArgumentException('The API base URL must be an absolute HTTPS URL.');
         }
         if ($timeoutSeconds < 1 || $timeoutSeconds > 120) {
@@ -40,7 +42,8 @@ final class LicenseClient
         } catch (Throwable $exception) {
             throw new InvalidArgumentException('Unable to load the RSA private key PEM.', 0, $exception);
         }
-        if (!method_exists($key, 'getLength') || !method_exists($key, 'sign') || $key->getLength() < 3072) {
+        if (!method_exists($key, 'getLength') || !method_exists($key, 'sign')
+            || !method_exists($key, 'getPublicKey') || $key->getLength() < 3072) {
             throw new InvalidArgumentException('RSA-3072 or stronger private key is required.');
         }
 
