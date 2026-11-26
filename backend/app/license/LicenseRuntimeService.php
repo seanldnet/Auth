@@ -28,6 +28,18 @@ final class LicenseRuntimeService
                 if ($this->expireIfNeeded($license, $ip, $agent)) {
                     return ['valid' => false, 'status' => 'EXPIRED', 'message' => '授权已过期'];
                 }
+                if ($license['device_fingerprint_hash'] === null) {
+                    Db::execute(
+                        'UPDATE auth_licenses SET device_fingerprint_hash = ?, device_label = ?, updated_at = UTC_TIMESTAMP() WHERE id = ?',
+                        [$fingerprintHash, $this->deviceLabel($deviceLabel), (int)$license['id']],
+                    );
+                    $this->event((int)$license['id'], 'LICENSE_DEVICE_BOUND', ['device_fingerprint_hash' => null], [
+                        'device_fingerprint_hash' => $fingerprintHash,
+                    ], $ip, $agent);
+                    $license['device_fingerprint_hash'] = $fingerprintHash;
+                    $license['device_label'] = $this->deviceLabel($deviceLabel);
+                    return $this->runtimeResult($license, false);
+                }
                 if (hash_equals((string)$license['device_fingerprint_hash'], $fingerprintHash)) {
                     return $this->runtimeResult($license, true);
                 }
