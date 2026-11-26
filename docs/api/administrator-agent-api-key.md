@@ -36,7 +36,8 @@ LOWERCASE_HEX_SHA256_OF_EXACT_BODY_BYTES
 - 精确 IP 白名单非空时，仅允许列表内来源 IP。
 - Key 必须处于 ACTIVE 且未过期；用户账号必须仍为 ACTIVE。
 - 验签通过后仍须检查 Key 权限和资源归属。代理不得通过传入其他用户/代理 ID 越权访问。
-- 定期清理过期 Nonce；清理任务不得删除仍在有效窗口内的记录。
+- 生产环境必须使用 HTTPS。
+- Nonce 过期清理由后续调度任务执行；不能删除仍在有效窗口内的记录。
 
 ## 5. 权限标识（首批）
 - `license.create`：在调用者数据范围内开通授权。
@@ -46,9 +47,11 @@ LOWERCASE_HEX_SHA256_OF_EXACT_BODY_BYTES
 - `sub_agent.read`：查询调用者数据范围内下级代理。
 - `*`：仅管理员可用，表示全站权限。
 
-Key 管理接口首批：
+## 6. 管理接口与实现边界
 - `GET /api/api-keys`
 - `POST /api/api-keys`
 - `PATCH /api/api-keys/{keyId}/revoke`
 
-注意：Key 管理接口已先实现凭据生命周期；业务 API 的验签中间件、权限检查和授权/用户业务路由必须在后续开发中接入后，才能宣称第三方 API 调用闭环可用。
+API Key 管理接口通过现有登录会话保护。请求认证中间件 `ApiKeyMiddleware` 已实现签名、时间窗、IP 白名单、账号/Key 状态和 Nonce 唯一性校验，并将权限写入请求上下文。
+
+业务 API 的授权/用户路由仍需逐项接入该中间件，并在 Service 层检查权限及资源归属；在这些业务路由接入前，不得宣称第三方 API 调用闭环已完成。
