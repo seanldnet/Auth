@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS auth_platform_signing_keys (
     algorithm VARCHAR(32) NOT NULL DEFAULT 'RSA-PSS-SHA256',
     status ENUM('ACTIVE','RETIRED','REVOKED') NOT NULL DEFAULT 'ACTIVE',
     is_primary TINYINT(1) NOT NULL DEFAULT 0,
+    primary_slot TINYINT GENERATED ALWAYS AS (CASE WHEN status = 'ACTIVE' AND is_primary = 1 THEN 1 ELSE NULL END) STORED,
     verify_until DATETIME NULL,
     created_by BIGINT UNSIGNED NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -15,6 +16,7 @@ CREATE TABLE IF NOT EXISTS auth_platform_signing_keys (
     PRIMARY KEY (id),
     UNIQUE KEY uk_platform_signing_key_id (key_id),
     KEY idx_platform_signing_key_status (status, is_primary),
+    UNIQUE KEY uk_platform_signing_key_primary (primary_slot),
     CONSTRAINT fk_platform_signing_key_creator FOREIGN KEY (created_by) REFERENCES auth_users(id) ON DELETE RESTRICT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
