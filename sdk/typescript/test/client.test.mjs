@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  constants, generateKeyPairSync, verify,
+  constants, generateKeyPairSync, verify, createHash,
 } from "node:crypto";
 import { buildCanonicalMessage, signRequest } from "../dist/index.js";
 
@@ -28,5 +28,5 @@ function requireHash(body) {
   return createHashHex(body);
 }
 function createHashHex(body) {
-  return new (require("node:crypto").Hash)("sha256").update(body).digest("hex");
+  return createHash("sha256").update(body).digest("hex");
 }
