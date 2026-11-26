@@ -178,13 +178,11 @@ final class UserManagementService
 
     private function initializeWalletAccounts(int $userId): void
     {
-        foreach (['CNY', 'USDT'] as $currency) {
-            Db::execute(
-                'INSERT INTO auth_wallet_accounts (user_id, currency, balance, created_at, updated_at)
-                 VALUES (?, ?, 0, UTC_TIMESTAMP(), UTC_TIMESTAMP())',
-                [$userId, $currency],
-            );
-        }
+        Db::execute(
+            'INSERT INTO auth_wallet_accounts (user_id, balance, created_at, updated_at)
+             VALUES (?, 0, UTC_TIMESTAMP(), UTC_TIMESTAMP())',
+            [$userId],
+        );
     }
 
     private function validateUsername(string $username): string
