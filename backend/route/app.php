@@ -4,6 +4,10 @@ use app\middleware\AdminMiddleware;
 use think\facade\Route;
 
 Route::get('api/health', 'Health/index');
+Route::post('api/license/activate', 'LicenseRuntime/activate');
+Route::post('api/license/verify', 'LicenseRuntime/verify');
+Route::post('api/license/change-device', 'LicenseRuntime/changeDevice');
+Route::post('api/license/unbind', 'LicenseRuntime/unbind');
 Route::any('api/payments/callback/:channel', 'PaymentCallback/index');
 Route::get('api/payments/cashier/:orderNo/:token', 'PaymentCashier/index');
 Route::get('api/payments/cashier/:orderNo/:token/status', 'PaymentCashier/status');
