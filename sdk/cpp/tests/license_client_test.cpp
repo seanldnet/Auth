@@ -42,7 +42,7 @@ int main() {
 
     unsigned char digest[SHA256_DIGEST_LENGTH];
     SHA256(reinterpret_cast<const unsigned char*>(message.data()), message.size(), digest);
-    EVP_PKEY_CTX* verify_context = EVP_PKEY_CTX_new_from_pkey(nullptr, key, nullptr);
+    EVP_PKEY_CTX* verify_context = EVP_PKEY_CTX_new(key, nullptr);
     assert(verify_context != nullptr);
     assert(EVP_PKEY_verify_init(verify_context) > 0);
     assert(EVP_PKEY_CTX_set_rsa_padding(verify_context, RSA_PKCS1_PSS_PADDING) > 0);
