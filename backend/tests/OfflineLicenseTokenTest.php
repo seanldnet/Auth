@@ -59,11 +59,8 @@ final class OfflineLicenseTokenTest extends TestCase
         $signature = $private->withHash('sha256')->withPadding(RSA::SIGNATURE_PSS)
             ->withMGFHash('sha256')->withSaltLength(32)->sign($payload);
         $token = OfflineLicenseToken::encode($payload, $signature);
-        $parts = explode('.', $token);
-        $tampered = OfflineLicenseToken::encode(
-            base64_decode(strtr($parts[0], '-_', '+/')) . 'x',
-            $signature,
-        );
+        $tamperedPayload = str_replace('"expires_at":1800003600', '"expires_at":1800003601', $payload);
+        $tampered = OfflineLicenseToken::encode($tamperedPayload, $signature);
         $this->expectException(RuntimeException::class);
         OfflineLicenseToken::verify(
             $tampered, $publicPem, 'app_0123456789abcdef01234567',
