@@ -10,10 +10,18 @@ find_package(CURL REQUIRED)
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(JSONC REQUIRED IMPORTED_TARGET json-c)
 
-add_library(auth_license_sdk src/auth_license.c)
+add_library(auth_license_sdk STATIC src/auth_license.c)
+set_target_properties(auth_license_sdk PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(auth_license_sdk PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_link_libraries(auth_license_sdk PUBLIC OpenSSL::Crypto CURL::libcurl PkgConfig::JSONC pthread)
 target_compile_options(auth_license_sdk PRIVATE -Wall -Wextra -Wpedantic)
+
+add_library(auth_license_easy_bridge SHARED src/easy_bridge.c)
+target_include_directories(auth_license_easy_bridge PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_link_libraries(auth_license_easy_bridge PRIVATE auth_license_sdk)
+set_target_properties(auth_license_easy_bridge PROPERTIES OUTPUT_NAME "AuthLicenseEasyBridge" WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+
 
 include(CTest)
 if(BUILD_TESTING)
@@ -21,4 +29,7 @@ if(BUILD_TESTING)
   target_include_directories(auth_license_sdk_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
   target_link_libraries(auth_license_sdk_tests PRIVATE auth_license_sdk OpenSSL::Crypto)
   add_test(NAME auth_license_sdk_tests COMMAND auth_license_sdk_tests)
+  add_executable(auth_license_easy_bridge_tests tests/test_easy_bridge.c)
+  target_link_libraries(auth_license_easy_bridge_tests PRIVATE auth_license_easy_bridge)
+  add_test(NAME auth_license_easy_bridge_tests COMMAND auth_license_easy_bridge_tests)
 endif()
