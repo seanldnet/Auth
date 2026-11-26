@@ -39,6 +39,7 @@ final class ApiKeyMiddleware
         );
         $record = $rows[0] ?? null;
         if (!is_array($record) || $record['key_status'] !== 'ACTIVE' || $record['user_status'] !== 'ACTIVE'
+            || (int)$record['must_change_password'] === 1
             || ($record['expires_at'] !== null && strtotime((string)$record['expires_at'] . ' UTC') <= time())
         ) {
             return json(['success' => false, 'message' => 'API 密钥认证失败'], 401);
