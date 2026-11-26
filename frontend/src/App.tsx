@@ -12,6 +12,7 @@ import { LicensesPage } from "@/pages/licenses";
 import { UsersPage } from "@/pages/users";
 import { RegisterPage } from "@/pages/register";
 import { AccountPage } from "@/pages/account";
+import { ApiKeysPage } from "@/pages/api-keys";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/licenses" element={<LicensesPage />} />
         <Route path="/users" element={<UsersPage />} />
         <Route path="/account" element={<AccountPage />} />
+        <Route path="/api-keys" element={<ApiKeysPage />} />
         <Route path="/payments" element={<PaymentsPage />} />
         <Route path="/top-up" element={<TopUpPage />} />
         <Route path="/payment-orders" element={<PaymentOrdersPage />} />
