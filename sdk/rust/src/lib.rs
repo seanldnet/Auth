@@ -7,7 +7,7 @@ use rsa::pss::BlindedSigningKey;
 use rsa::signature::{RandomizedSigner, SignatureEncoding, Verifier};
 use rsa::traits::PublicKeyParts;
 use rsa::{RsaPrivateKey, RsaPublicKey};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use std::io::Read;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -54,7 +54,7 @@ pub struct LicenseResult {
     pub message: Option<String>,
 }
 
-#[derive(Serialize)]
+#[derive(Deserialize)]
 struct ApiEnvelope<T> {
     success: bool,
     data: Option<T>,
