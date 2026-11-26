@@ -2,6 +2,7 @@ import base64
 import hashlib
 
 import pytest
+from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
@@ -30,7 +31,7 @@ def test_rsa_pss_signature_verifies_and_tampering_fails():
         padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=32),
         hashes.SHA256(),
     )
-    with pytest.raises(Exception):
+    with pytest.raises(InvalidSignature):
         public_key.verify(
             signature, message + b"x",
             padding.PSS(mgf=padding.MGF1(hashes.SHA256()), salt_length=32),
