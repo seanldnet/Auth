@@ -15,5 +15,13 @@ Route::get('api/payments/channels', 'PaymentOrder/channels')->middleware(AuthMid
 Route::get('api/payments/orders', 'PaymentOrder/index')->middleware(AuthMiddleware::class);
 Route::post('api/payments/orders', 'PaymentOrder/create')->middleware(AuthMiddleware::class);
 Route::post('api/auth/change-password', 'Auth/changePassword')->middleware(AuthMiddleware::class);
+
+Route::get('api/admin/software', 'SoftwareCatalog/softwareIndex')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/admin/software', 'SoftwareCatalog/softwareCreate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::put('api/admin/software/:softwareId', 'SoftwareCatalog/softwareUpdate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::patch('api/admin/software/:softwareId/status', 'SoftwareCatalog/softwareStatus')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::get('api/admin/software/:softwareId/plans', 'SoftwareCatalog/planIndex')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/admin/software/:softwareId/plans', 'SoftwareCatalog/planCreate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::put('api/admin/software/:softwareId/plans/:planId', 'SoftwareCatalog/planUpdate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/payment-channels', 'PaymentChannelAdmin/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::put('api/admin/payment-channels/:channelCode', 'PaymentChannelAdmin/save')->middleware([AuthMiddleware::class, AdminMiddleware::class]);

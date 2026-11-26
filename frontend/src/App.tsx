@@ -7,6 +7,7 @@ import { CheckoutPage } from "@/pages/checkout";
 import { ChangePasswordPage } from "@/pages/change-password";
 import { TopUpPage } from "@/pages/top-up";
 import { PaymentOrdersPage } from "@/pages/payment-orders";
+import { SoftwarePage } from "@/pages/software";
 
 export default function App() {
   return (
@@ -16,6 +17,7 @@ export default function App() {
       <Route path="/change-password" element={<ChangePasswordPage />} />
       <Route element={<AdminLayout />}>
         <Route path="/" element={<DashboardPage />} />
+        <Route path="/apps" element={<SoftwarePage />} />
         <Route path="/payments" element={<PaymentsPage />} />
         <Route path="/top-up" element={<TopUpPage />} />
         <Route path="/payment-orders" element={<PaymentOrdersPage />} />
