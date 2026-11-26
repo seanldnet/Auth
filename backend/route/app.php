@@ -34,8 +34,8 @@ Route::get('api/api-keys', 'ApiKeys/index')->middleware(AuthMiddleware::class);
 Route::post('api/api-keys', 'ApiKeys/create')->middleware(AuthMiddleware::class);
 Route::patch('api/api-keys/:keyId/revoke', 'ApiKeys/revoke')->middleware(AuthMiddleware::class);
 
-Route::get('api/v1/users', 'ApiKeyBusinessApi/users')->middleware(\\app\\middleware\\ApiKeyMiddleware::class);
-Route::get('api/v1/sub-agents', 'ApiKeyBusinessApi/subAgents')->middleware(\\app\\middleware\\ApiKeyMiddleware::class);
+Route::get('api/v1/users', 'ApiKeyBusinessApi/users')->middleware(\app\middleware\ApiKeyMiddleware::class);
+Route::get('api/v1/sub-agents', 'ApiKeyBusinessApi/subAgents')->middleware(\app\middleware\ApiKeyMiddleware::class);
 
 Route::get('api/admin/software', 'SoftwareCatalog/softwareIndex')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::post('api/admin/software', 'SoftwareCatalog/softwareCreate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
