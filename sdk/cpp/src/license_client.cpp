@@ -22,12 +22,12 @@ namespace auth_license {
 namespace {
 constexpr std::size_t kMaxResponseBytes = 1024 * 1024;
 
+void ensure_default_provider();
+
 void ensure_curl_initialized() {
     static std::once_flag once;
     std::call_once(once, [] {
-        if (OSSL_PROVIDER_load(nullptr, "default") == nullptr) {
-            throw std::runtime_error(openssl_error_message("Unable to load OpenSSL default provider"));
-        }
+        ensure_default_provider();
         if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) {
             throw std::runtime_error("Unable to initialize libcurl");
         }
@@ -66,6 +66,15 @@ std::string openssl_error_message(const char* fallback) {
     char buffer[256]{};
     ERR_error_string_n(code, buffer, sizeof(buffer));
     return std::string(fallback) + ": " + buffer;
+}
+
+void ensure_default_provider() {
+    static std::once_flag once;
+    static OSSL_PROVIDER* provider = nullptr;
+    std::call_once(once, [] { provider = OSSL_PROVIDER_load(nullptr, "default"); });
+    if (provider == nullptr) {
+        throw std::runtime_error(openssl_error_message("Unable to load OpenSSL default provider"));
+    }
 }
 
 void require_openssl(int result, const char* operation) {
