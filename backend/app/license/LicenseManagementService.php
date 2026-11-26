@@ -234,7 +234,7 @@ final class LicenseManagementService
     }
 
     /**
-     * Refunds exactly one consumed quota unit when an agent-issued license is voided.
+     * Refunds all issue, renewal, and replacement quota units when an agent-issued license is voided.
      * The unique ledger key makes this operation idempotent and the surrounding
      * license-status transaction keeps the license and quota reversal atomic.
      *
@@ -263,12 +263,13 @@ final class LicenseManagementService
 
         $licenseId = (int)$license['id'];
         $consumeRows = Db::query(
-            "SELECT id FROM auth_agent_license_quota_transactions
-             WHERE business_type = 'LICENSE_ISSUE' AND business_id = ?
-               AND direction = 'CONSUME' LIMIT 1",
+            "SELECT COALESCE(SUM(quantity), 0) AS aggregate FROM auth_agent_license_quota_transactions
+             WHERE business_id = ? AND direction = 'CONSUME'
+               AND business_type IN ('LICENSE_ISSUE','LICENSE_RENEWAL','LICENSE_REPLACEMENT_IN')",
             [$licenseId],
         );
-        if ($consumeRows === []) return;
+        $refundQuantity = (int)($consumeRows[0]['aggregate'] ?? 0);
+        if ($refundQuantity < 1) return;
 
         $reversalKey = hash('sha256', 'license-void:' . $licenseId);
         $existing = Db::query(
@@ -278,28 +279,28 @@ final class LicenseManagementService
         if ($existing !== []) return;
 
         $availableBefore = (int)$quota['available_quantity'];
-        $availableAfter = $availableBefore + 1;
+        $availableAfter = $availableBefore + $refundQuantity;
         $consumedBefore = (int)$quota['consumed_quantity'];
-        if ($consumedBefore < 1) {
+        if ($consumedBefore < $refundQuantity) {
             throw new RuntimeException('授权额度账本不一致，无法安全退回额度。');
         }
 
         Db::execute(
             'UPDATE auth_agent_license_quotas
-             SET available_quantity = available_quantity + 1,
-                 consumed_quantity = consumed_quantity - 1,
+             SET available_quantity = available_quantity + ?,
+                 consumed_quantity = consumed_quantity - ?,
                  updated_at = UTC_TIMESTAMP()
              WHERE id = ?',
-            [(int)$quota['id']],
+            [$refundQuantity, $refundQuantity, (int)$quota['id']],
         );
         Db::execute(
             'INSERT INTO auth_agent_license_quota_transactions
              (quota_id, user_id, software_id, plan_id, direction, quantity, available_before,
               available_after, actor_user_id, business_type, business_id, idempotency_key, description, created_at)
-             VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
             [(int)$quota['id'], $issuerId, (int)$license['software_id'], (int)$license['plan_id'],
-             'REVERSAL', $availableBefore, $availableAfter, $actorId, 'LICENSE_VOID',
-             $licenseId, $reversalKey, '授权作废，退回代理额度'],
+             'REVERSAL', $refundQuantity, $availableBefore, $availableAfter, $actorId, 'LICENSE_VOID',
+             $licenseId, $reversalKey, '授权作废，退回签发、续费及更换占用额度'],
         );
     }
 

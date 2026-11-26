@@ -20,7 +20,7 @@ final class ApiKeyMiddleware
         $plain = strtolower($matches[1]);
         $rows = Db::query(
             'SELECT k.id AS api_key_id, k.owner_user_id, k.scopes, k.ip_allowlist, k.expires_at,
-                    u.username, u.role, u.status
+                    u.username, u.role, u.status, u.must_change_password
              FROM auth_api_keys k
              INNER JOIN auth_users u ON u.id = k.owner_user_id
              WHERE k.key_hash = ? AND k.revoked_at IS NULL
@@ -29,7 +29,7 @@ final class ApiKeyMiddleware
             [hash('sha256', $plain)],
         );
         $record = $rows[0] ?? null;
-        if (!is_array($record) || $record['status'] !== 'ACTIVE') {
+        if (!is_array($record) || $record['status'] !== 'ACTIVE' || (int)($record['must_change_password'] ?? 0) === 1) {
             return json(['success' => false, 'message' => 'API Key 无效、已撤销或已过期'], 401);
         }
 
@@ -42,14 +42,29 @@ final class ApiKeyMiddleware
         $scopes = is_array($scopes) ? $scopes : [];
         $path = trim((string)$request->pathinfo(), '/');
         $method = strtoupper((string)$request->method());
-        $required = match ([$path, $method]) {
-            ['api/v1/licenses', 'GET'] => 'licenses.read',
-            ['api/v1/licenses', 'POST'] => 'licenses.create',
-            ['api/v1/users', 'GET'] => 'users.read',
+        $isAdminFullScope = ($record['role'] ?? '') === 'ADMIN'
+            && in_array('*', $scopes, true)
+            && str_starts_with($path, 'api/')
+            && !str_starts_with($path, 'api/auth/');
+        $required = $isAdminFullScope ? '*' : match ([$path, $method]) {
+            ['api/licenses', 'GET'], ['api/v1/licenses', 'GET'] => 'licenses.read',
+            ['api/licenses', 'POST'], ['api/v1/licenses', 'POST'] => 'licenses.create',
+            ['api/users', 'GET'], ['api/v1/users', 'GET'] => 'users.read',
             ['api/v1/users/children', 'GET'] => 'users.children.read',
-            ['api/v1/quotas', 'GET'] => 'quotas.read',
+            ['api/license-quotas', 'GET'], ['api/v1/quotas', 'GET'] => 'quotas.read',
             default => null,
         };
+        if ($required === null && (preg_match('#^api/licenses/[0-9]+/renew$#', $path)
+            || preg_match('#^api/v1/licenses/[0-9]+/renew$#', $path))) {
+            $required = 'licenses.renew';
+        }
+        if ($required === null && (preg_match('#^api/licenses/[0-9]+/replace$#', $path)
+            || preg_match('#^api/v1/licenses/[0-9]+/replace$#', $path))) {
+            $required = 'licenses.replace';
+        }
+        if ($required === null && preg_match('#^api/license-quotas/[0-9]+/transactions$#', $path)) {
+            $required = 'quotas.read';
+        }
         if ($required === null || (!in_array('*', $scopes, true) && !in_array($required, $scopes, true))) {
             return json(['success' => false, 'message' => 'API Key 未授权此接口或请求方法'], 403);
         }

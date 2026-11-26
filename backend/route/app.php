@@ -23,6 +23,11 @@ Route::get('api/v1/users', 'ApiV1/users')->middleware(ApiKeyMiddleware::class);
 Route::get('api/v1/users/children', 'ApiV1/users')->middleware(ApiKeyMiddleware::class);
 Route::get('api/v1/quotas', 'ApiV1/quotas')->middleware(ApiKeyMiddleware::class);
 
+Route::get('api/wallet', 'Wallet/index')->middleware(AuthMiddleware::class);
+Route::get('api/notifications', 'Notifications/index')->middleware(AuthMiddleware::class);
+Route::patch('api/notifications/:notificationId/read', 'Notifications/read')->middleware(AuthMiddleware::class);
+Route::patch('api/notifications/read-all', 'Notifications/readAll')->middleware(AuthMiddleware::class);
+
 Route::post('api/auth/login', 'Auth/login');
 Route::post('api/auth/register', 'UserManagement/register');
 Route::post('api/auth/transfer-request', 'UserTransfer/request')->middleware(AuthMiddleware::class);
@@ -30,6 +35,12 @@ Route::get('api/users', 'UserManagement/index')->middleware(AuthMiddleware::clas
 Route::get('api/license-quotas/:quotaId/transactions', 'AgentLicenseQuota/transactions')->middleware(AuthMiddleware::class);
 Route::get('api/license-quotas', 'AgentLicenseQuota/index')->middleware(AuthMiddleware::class);
 Route::post('api/admin/license-quotas', 'AgentLicenseQuota/allocate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/licenses/:licenseId/replace', 'LicenseReplacement/replace')->middleware(AuthMiddleware::class);
+Route::post('api/admin/licenses/:licenseId/replace', 'LicenseReplacement/replace')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/v1/licenses/:licenseId/replace', 'LicenseReplacement/replace')->middleware(ApiKeyMiddleware::class);
+Route::post('api/licenses/:licenseId/renew', 'LicenseRenewal/renew')->middleware(AuthMiddleware::class);
+Route::post('api/admin/licenses/:licenseId/renew', 'LicenseRenewal/renew')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/v1/licenses/:licenseId/renew', 'LicenseRenewal/renew')->middleware(ApiKeyMiddleware::class);
 Route::get('api/licenses', 'AgentLicenseIssuance/index')->middleware(AuthMiddleware::class);
 Route::post('api/licenses', 'AgentLicenseIssuance/create')->middleware(AuthMiddleware::class);
 Route::post('api/users', 'UserManagement/create')->middleware(AuthMiddleware::class);
@@ -41,6 +52,7 @@ Route::patch('api/admin/users/:userId/status', 'UserTransfer/status')->middlewar
 Route::post('api/auth/logout', 'Auth/logout')->middleware(AuthMiddleware::class);
 Route::get('api/auth/me', 'Auth/me')->middleware(AuthMiddleware::class);
 Route::get('api/payments/channels', 'PaymentOrder/channels')->middleware(AuthMiddleware::class);
+Route::get('api/admin/payment-orders', 'PaymentOrderAdmin/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/payments/orders', 'PaymentOrder/index')->middleware(AuthMiddleware::class);
 Route::post('api/payments/orders', 'PaymentOrder/create')->middleware(AuthMiddleware::class);
 Route::post('api/auth/change-password', 'Auth/changePassword')->middleware(AuthMiddleware::class);
@@ -61,6 +73,8 @@ Route::patch('api/admin/licenses/:licenseId/status', 'LicenseManagement/status')
 Route::patch('api/admin/licenses/:licenseId/unbind', 'LicenseManagement/unbindDevice')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::post('api/admin/software/:softwareId/plans', 'SoftwareCatalog/planCreate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::put('api/admin/software/:softwareId/plans/:planId', 'SoftwareCatalog/planUpdate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::get('api/admin/wallets', 'WalletAdmin/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/admin/wallets/:userId/credit', 'WalletAdmin/credit')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/wallet-display-unit', 'WalletSettings/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::put('api/admin/wallet-display-unit', 'WalletSettings/save')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/regions', 'RegionNodes/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  Activity, AppWindow, BookOpen, CreditCard, FileClock, Globe2, KeyRound, LayoutDashboard,
+  Activity, AppWindow, Bell, BookOpen, CreditCard, FileClock, Globe2, KeyRound, LayoutDashboard,
   Layers, LogOut, Menu, Settings, ShieldCheck, Users, LoaderCircle, Wallet, ReceiptText, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ const agentRoles: Role[] = ["AGENT", "SUB_AGENT"];
 const groups: { title: string; items: NavItem[] }[] = [
   { title: "工作台", items: [
     { label: "总览", to: "/", icon: LayoutDashboard, roles: allRoles },
+    { label: "通知中心", to: "/notifications", icon: Bell, roles: allRoles },
   ]},
   { title: "授权业务", items: [
     { label: "软件管理", to: "/apps", icon: AppWindow, roles: adminRoles },
@@ -29,7 +30,9 @@ const groups: { title: string; items: NavItem[] }[] = [
     { label: "账号信息", to: "/account", icon: Users, roles: ["USER"] },
   ]},
   { title: "财务中心", items: [
+    { label: "我的钱包", to: "/wallet", icon: Wallet, roles: allRoles },
     { label: "账户充值", to: "/top-up", icon: Wallet, roles: allRoles },
+    { label: "钱包管理", to: "/wallet-management", icon: Wallet, roles: adminRoles },
     { label: "充值记录", to: "/payment-orders", icon: ReceiptText, roles: allRoles },
     { label: "支付渠道", to: "/payments", icon: CreditCard, roles: adminRoles },
   ]},

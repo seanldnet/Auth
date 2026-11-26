@@ -121,6 +121,31 @@ export function LicensesPage() {
     } catch (cause) { setError(cause instanceof Error ? cause.message : "导出失败"); }
   }
 
+  async function renew(item: License) {
+    if (!selectedSoftwareId || !window.confirm(`确认续费授权 ${item.license_no}？`)) return;
+    setError(""); setNotice("");
+    try {
+      const result = await request<{expires_at:string|null;quota_consumed:boolean}>(`/api/admin/licenses/${item.id}/renew`, {
+        method:"POST", headers:{"Idempotency-Key":crypto.randomUUID().replaceAll("-","")},
+      });
+      setNotice(`授权已续费。新到期时间：${result.expires_at||"永久"}。`);
+      await loadLicenses();
+    } catch (cause) { setError(cause instanceof Error?cause.message:"续费失败"); }
+  }
+
+  async function replaceLicense(item: License) {
+    if (!window.confirm(`确认更换授权 ${item.license_no}？原授权将作废，新授权会继承原套餐、到期时间和设备绑定。`)) return;
+    setError(""); setNotice(""); setGenerated([]);
+    try {
+      const result = await request<{new_license_id:number;new_license_no:string;license_key:string}>(`/api/admin/licenses/${item.id}/replace`, {
+        method:"POST", headers:{"Idempotency-Key":crypto.randomUUID().replaceAll("-","")},
+      });
+      setGenerated([{id:result.new_license_id,license_no:result.new_license_no,license_key:result.license_key}]);
+      setNotice("授权更换成功，原授权已作废。新授权明文只显示本次，请立即复制保存。");
+      await loadLicenses();
+    } catch (cause) { setError(cause instanceof Error?cause.message:"更换授权失败"); }
+  }
+
   async function updateStatus(item: License, status: "FROZEN" | "ACTIVE" | "VOID") {
     setError(""); setNotice("");
     try {
@@ -145,7 +170,7 @@ export function LicensesPage() {
         <Card className="border-amber-500/40">
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><ShieldAlert className="size-4" />新生成的授权码</CardTitle><CardDescription>离开此页面后将无法再次查看完整授权码。请立即复制并安全保存。</CardDescription></CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <div className="max-h-72 overflow-auto rounded-md bg-muted p-3"><pre className="whitespace-pre-wrap break-all text-xs leading-6">{generated.map((item) => item.license_key).join("\n")}</pre></div>
+            <div className="max-h-72 overflow-auto rounded-md bg-muted p-3"><pre className="whitespace-pre-wrap break-all text-xs leading-6">{generated.map((item) => item.license_no + "  " + item.license_key).join("\n")}</pre></div>
             <div className="flex flex-wrap gap-2"><Button size="sm" onClick={() => void navigator.clipboard.writeText(generated.map((item) => item.license_key).join("\n"))}><Copy className="size-4" />复制全部授权码</Button><Button size="sm" variant="outline" onClick={() => void navigator.clipboard.writeText(generated.map((item) => `${item.license_no},${item.license_key}`).join("\n"))}>复制编号和授权码</Button><Button size="sm" variant="ghost" onClick={() => setGenerated([])}>关闭明文展示</Button></div>
           </CardContent>
         </Card>
@@ -166,7 +191,7 @@ export function LicensesPage() {
         <CardHeader><CardTitle className="text-base">授权记录</CardTitle><CardDescription>{selectedSoftware ? `${selectedSoftware.name} · 共 ${total} 条记录` : "请选择软件"}</CardDescription></CardHeader>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-col gap-3 sm:flex-row"><Input value={keyword} onChange={(e) => { setKeyword(e.target.value); setPage(1); }} placeholder="搜索授权编号或授权码尾号" /><div className="flex flex-wrap gap-2">{["","GENERATED","ACTIVE","FROZEN","VOID","EXPIRED"].map((status) => <Button key={status || "ALL"} size="sm" variant={statusFilter === status ? "default" : "outline"} onClick={() => { setStatusFilter(status); setPage(1); }}>{status ? statusText[status] : "全部"}</Button>)}</div></div>
-          {loading ? <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground"><LoaderCircle className="size-4 animate-spin" />正在读取授权记录</div> : licenses.length === 0 ? <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">没有符合条件的授权记录。</div> : <div className="flex flex-col gap-3">{licenses.map((item) => <div key={item.id} className="flex flex-col gap-3 rounded-lg border p-4 lg:flex-row lg:items-center lg:justify-between"><div className="flex min-w-0 flex-col gap-1"><div className="flex flex-wrap items-center gap-2"><span className="font-medium">{item.license_no}</span><Badge variant={item.status === "ACTIVE" ? "success" : item.status === "FROZEN" ? "warning" : "outline"}>{statusText[item.status] || item.status}</Badge></div><span className="text-xs text-muted-foreground">{item.plan_name} · {item.license_key_hint} · {item.created_at}</span><span className="text-xs text-muted-foreground">设备：{item.device_label || "未绑定"} · 换机次数：{item.machine_change_count} · 到期：{item.expires_at || "激活后计算 / 永久"}</span></div><div className="flex flex-wrap gap-2">{item.status === "ACTIVE" || item.status === "GENERATED" ? <Button size="sm" variant="outline" onClick={() => void updateStatus(item, "FROZEN")}>冻结</Button> : null}{item.status === "FROZEN" ? <Button size="sm" variant="outline" onClick={() => void updateStatus(item, "ACTIVE")}>恢复</Button> : null}{item.status !== "VOID" && item.status !== "EXPIRED" ? <Button size="sm" variant="destructive" onClick={() => void updateStatus(item, "VOID")}>作废</Button> : null}</div></div>)}</div>}
+          {loading ? <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground"><LoaderCircle className="size-4 animate-spin" />正在读取授权记录</div> : licenses.length === 0 ? <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">没有符合条件的授权记录。</div> : <div className="flex flex-col gap-3">{licenses.map((item) => <div key={item.id} className="flex flex-col gap-3 rounded-lg border p-4 lg:flex-row lg:items-center lg:justify-between"><div className="flex min-w-0 flex-col gap-1"><div className="flex flex-wrap items-center gap-2"><span className="font-medium">{item.license_no}</span><Badge variant={item.status === "ACTIVE" ? "success" : item.status === "FROZEN" ? "warning" : "outline"}>{statusText[item.status] || item.status}</Badge></div><span className="text-xs text-muted-foreground">{item.plan_name} · {item.license_key_hint} · {item.created_at}</span><span className="text-xs text-muted-foreground">设备：{item.device_label || "未绑定"} · 换机次数：{item.machine_change_count} · 到期：{item.expires_at || "激活后计算 / 永久"}</span></div><div className="flex flex-wrap gap-2">{item.status === "ACTIVE" || item.status === "EXPIRED" ? <Button size="sm" variant="outline" onClick={() => void renew(item)}>续费</Button> : null}{item.status === "ACTIVE" || item.status === "GENERATED" ? <Button size="sm" variant="outline" onClick={() => void replaceLicense(item)}>更换授权</Button> : null}{item.status === "ACTIVE" || item.status === "GENERATED" ? <Button size="sm" variant="outline" onClick={() => void updateStatus(item, "FROZEN")}>冻结</Button> : null}{item.status === "FROZEN" ? <Button size="sm" variant="outline" onClick={() => void updateStatus(item, "ACTIVE")}>恢复</Button> : null}{item.status !== "VOID" && item.status !== "EXPIRED" ? <Button size="sm" variant="destructive" onClick={() => void updateStatus(item, "VOID")}>作废</Button> : null}</div></div>)}</div>}
           <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm text-muted-foreground"><span>第 {page} / {pages} 页</span><div className="flex gap-2"><Button size="sm" variant="outline" disabled={page <= 1 || loading} onClick={() => setPage((p) => p - 1)}>上一页</Button><Button size="sm" variant="outline" disabled={page >= pages || loading} onClick={() => setPage((p) => p + 1)}>下一页</Button></div></div>
         </CardContent>
       </Card>
