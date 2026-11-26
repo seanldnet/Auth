@@ -14,6 +14,7 @@
 代理可用权限：
 - licenses.create
 - licenses.read
+- licenses.renew
 - users.read
 - users.children.read
 - quotas.read
@@ -25,6 +26,7 @@ Header：Authorization: Bearer ak_<64 位十六进制密钥>
 
 - GET /api/v1/licenses：查询授权。管理员必须传 software_id；代理仅查询本人签发的授权。
 - POST /api/v1/licenses：管理员生成授权；代理/下级代理按本人额度生成授权，必须传 Idempotency-Key。
+- POST /api/v1/licenses/{licenseId}/renew：续费本人签发的授权，需 licenses.renew 权限和 Idempotency-Key。
 - GET /api/v1/users：按当前 API Key 所属角色的数据范围查询用户。
 - GET /api/v1/users/children：查询本人下级范围用户。
 - GET /api/v1/quotas：管理员查看全站额度；代理只查看本人额度。
