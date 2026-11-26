@@ -20,7 +20,7 @@ final class ApiKeyMiddleware
         $plain = strtolower($matches[1]);
         $rows = Db::query(
             'SELECT k.id AS api_key_id, k.owner_user_id, k.scopes, k.ip_allowlist, k.expires_at,
-                    u.username, u.role, u.status
+                    u.username, u.role, u.status, u.must_change_password
              FROM auth_api_keys k
              INNER JOIN auth_users u ON u.id = k.owner_user_id
              WHERE k.key_hash = ? AND k.revoked_at IS NULL
@@ -29,7 +29,7 @@ final class ApiKeyMiddleware
             [hash('sha256', $plain)],
         );
         $record = $rows[0] ?? null;
-        if (!is_array($record) || $record['status'] !== 'ACTIVE') {
+        if (!is_array($record) || $record['status'] !== 'ACTIVE' || (int)($record['must_change_password'] ?? 0) === 1) {
             return json(['success' => false, 'message' => 'API Key 无效、已撤销或已过期'], 401);
         }
 
