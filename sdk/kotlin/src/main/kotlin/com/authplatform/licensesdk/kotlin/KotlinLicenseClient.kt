@@ -30,7 +30,14 @@ class KotlinLicenseClient private constructor(
 
     companion object {
         @JvmStatic
-        fun fromPem(baseUrl: String, appId: String, keyId: String, privateKeyPem: String): KotlinLicenseClient =
-            KotlinLicenseClient(JavaLicenseClient(URI.create(baseUrl), appId, keyId, privateKeyPem))
+        fun fromPem(baseUrl: String, appId: String, keyId: String, privateKeyPem: String): KotlinLicenseClient {
+            val uri = URI.create(baseUrl)
+            require(uri.scheme == "https" && !uri.host.isNullOrBlank() &&
+                (uri.path.isNullOrEmpty() || uri.path == "/") && uri.rawQuery == null &&
+                uri.rawFragment == null && uri.rawUserInfo == null) {
+                "The API base URL must be an HTTPS origin without path, query, or credentials."
+            }
+            return KotlinLicenseClient(JavaLicenseClient(uri, appId, keyId, privateKeyPem))
+        }
     }
 }
