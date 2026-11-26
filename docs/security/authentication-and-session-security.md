@@ -31,8 +31,8 @@ Role checks are enforced by backend middleware and service-level ownership check
 
 ## 4. Login abuse and audit
 
-- Failed attempts are tracked by a hash of username and source IP.
-- Five failed attempts in a 15-minute window trigger a 15-minute lock for that username/IP pair.
+- Failed attempts are tracked by hashes of username and source IP, with both per-account and per-IP aggregate counters.
+- Five failed attempts in a 15-minute window trigger a 15-minute lock for the account or source IP scope.
 - Login success/failure, logout, password changes, and payment-channel configuration changes are written to the audit table.
 - Passwords, raw session tokens and merchant secrets are never written to audit metadata.
 
