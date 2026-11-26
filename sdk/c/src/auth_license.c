@@ -54,6 +54,14 @@ static char *duplicate_string(const char *value) {
     return copy;
 }
 
+static int is_hex_string(const char *value) {
+    if (value == NULL) return 0;
+    for (const char *p = value; *p; ++p) {
+        if (!((*p >= '0' && *p <= '9') || (*p >= 'a' && *p <= 'f') || (*p >= 'A' && *p <= 'F'))) return 0;
+    }
+    return 1;
+}
+
 static void set_error(char **target, const char *message) {
     if (target != NULL) *target = duplicate_string(message != NULL ? message : "License SDK error");
 }
@@ -150,8 +158,8 @@ auth_license_client *auth_license_client_new(const char *base_url, const char *a
         set_error(error_message, "The API base URL must be an absolute HTTPS origin.");
         return NULL;
     }
-    if (app_id == NULL || strlen(app_id) != 28 || strncmp(app_id, "app_", 4) != 0
-        || key_id == NULL || strlen(key_id) != 20 || strncmp(key_id, "key_", 4) != 0) {
+    if (app_id == NULL || strlen(app_id) != 28 || strncmp(app_id, "app_", 4) != 0 || !is_hex_string(app_id + 4)
+        || key_id == NULL || strlen(key_id) != 20 || strncmp(key_id, "key_", 4) != 0 || !is_hex_string(key_id + 4)) {
         set_error(error_message, "A valid software App ID and signing Key ID are required.");
         return NULL;
     }
@@ -274,7 +282,7 @@ static char *post_json(auth_license_client *client, const char *path, struct jso
     if (envelope == NULL || !json_object_object_get_ex(envelope, "success", &success)
         || !json_object_get_boolean(success) || !json_object_object_get_ex(envelope, "data", &data)
         || !json_object_is_type(data, json_type_object) || status < 200 || status >= 300) {
-        const char *message_text = json_object_object_get_ex(envelope, "message", &message)
+        const char *message_text = envelope != NULL && json_object_object_get_ex(envelope, "message", &message)
             ? json_object_get_string(message) : "License API request failed.";
         set_error(error_message, message_text);
         if (envelope != NULL) json_object_put(envelope);
