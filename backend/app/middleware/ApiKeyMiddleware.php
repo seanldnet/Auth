@@ -50,6 +50,7 @@ final class ApiKeyMiddleware
             ['api/v1/quotas', 'GET'] => 'quotas.read',
             default => null,
         };
+        if ($required === null && preg_match('#^api/v1/licenses/[0-9]+/renew$#', $path)) $required = 'licenses.renew';
         if ($required === null || (!in_array('*', $scopes, true) && !in_array($required, $scopes, true))) {
             return json(['success' => false, 'message' => 'API Key 未授权此接口或请求方法'], 403);
         }
