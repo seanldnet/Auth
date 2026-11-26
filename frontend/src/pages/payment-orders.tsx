@@ -10,12 +10,11 @@ type PaymentOrder = {
   channel_code: string;
   currency: "CNY" | "USDT";
   amount: string;
-  display_amount: string;
   status: "CREATING" | "PENDING" | "PAID" | "EXPIRED" | "CANCELLED" | "REVIEW";
   created_at: string;
   expires_at: string | null;
   paid_at: string | null;
-  checkout_url: string | null;
+  checkout_url?: string | null;
   username?: string;
   display_amount?: string;
 };
@@ -92,7 +91,8 @@ export function PaymentOrdersPage() {
           </div>
           <History className="size-5 text-muted-foreground" />
         </CardHeader>
-        <CardContent className="flex flex-col gap-3">\n          {role === "ADMIN" ? <div className="grid gap-3 sm:grid-cols-[1fr_200px]"><input className="h-10 rounded-md border bg-background px-3 text-sm" value={keyword} onChange={e=>{setKeyword(e.target.value);setPage(1);}} placeholder="搜索订单号 / 用户 / 交易号"/><select className="h-10 rounded-md border bg-background px-3 text-sm" value={statusFilter} onChange={e=>{setStatusFilter(e.target.value);setPage(1);}}><option value="">全部状态</option>{Object.entries(statusMeta).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></div> : null}
+        <CardContent className="flex flex-col gap-3">
+          {role === "ADMIN" ? <div className="grid gap-3 sm:grid-cols-[1fr_200px]"><input className="h-10 rounded-md border bg-background px-3 text-sm" value={keyword} onChange={e=>{setKeyword(e.target.value);setPage(1);}} placeholder="搜索订单号 / 用户 / 交易号"/><select className="h-10 rounded-md border bg-background px-3 text-sm" value={statusFilter} onChange={e=>{setStatusFilter(e.target.value);setPage(1);}}><option value="">全部状态</option>{Object.entries(statusMeta).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></div> : null}
           {error ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</p> : null}
           {loading ? (
             <div className="flex items-center justify-center gap-3 py-8 text-sm text-muted-foreground">
@@ -117,7 +117,8 @@ export function PaymentOrdersPage() {
                       <Badge variant={status.variant}>{status.label}</Badge>
                       <Badge variant="outline">{order.currency}</Badge>
                     </div>
-                    <p className="break-all text-xs text-muted-foreground">{order.order_no}</p>\n                    {role === "ADMIN" && order.username ? <p className="text-xs text-muted-foreground">用户：{order.username}</p> : null}
+                    <p className="break-all text-xs text-muted-foreground">{order.order_no}</p>
+                    {role === "ADMIN" && order.username ? <p className="text-xs text-muted-foreground">用户：{order.username}</p> : null}
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                       <span>{order.channel_code}</span>
                       <span>创建：{order.created_at}</span>
