@@ -14,7 +14,8 @@ int main(void) {
     char *canonical = auth_license_build_canonical_message("post", "/api/license/verify",
         "1795700000", "0123456789abcdef0123456789abcdef", (const unsigned char *)body, strlen(body));
     CHECK(canonical != NULL);
-    CHECK(strncmp(canonical, "POST\n/api/license/verify\n1795700000\n0123456789abcdef0123456789abcdef\n", 74) == 0);
+    const char *prefix = "POST\n/api/license/verify\n1795700000\n0123456789abcdef0123456789abcdef\n";
+    CHECK(strncmp(canonical, prefix, strlen(prefix)) == 0);
     free(canonical);
     CHECK(auth_license_build_canonical_message("POST", "/api/license/verify?x=1",
         "1", "0123456789abcdef", (const unsigned char *)"", 0) == NULL);
