@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <openssl/rsa.h>
+#include <openssl/sha.h>
 
 int main() {
     const std::string body = R"({"app_id":"app_123"})";
@@ -39,16 +40,18 @@ int main() {
         : (!encoded.empty() && encoded.back() == '=' ? 1 : 0);
     decoded.resize(static_cast<std::size_t>(decoded_size) - padding);
 
-    EVP_MD_CTX* verify_context = EVP_MD_CTX_new();
-    EVP_PKEY_CTX* verify_key_context = nullptr;
-    assert(EVP_DigestVerifyInit(verify_context, &verify_key_context, EVP_sha256(), nullptr, key) > 0);
-    assert(EVP_PKEY_CTX_set_rsa_padding(verify_key_context, RSA_PKCS1_PSS_PADDING) > 0);
-    assert(EVP_PKEY_CTX_set_rsa_mgf1_md(verify_key_context, EVP_sha256()) > 0);
-    assert(EVP_PKEY_CTX_set_rsa_pss_saltlen(verify_key_context, 32) > 0);
-    assert(EVP_DigestVerifyUpdate(verify_context, message.data(), message.size()) > 0);
-    assert(EVP_DigestVerifyFinal(verify_context,
-        reinterpret_cast<const unsigned char*>(decoded.data()), decoded.size()) == 1);
-    EVP_MD_CTX_free(verify_context);
+    unsigned char digest[SHA256_DIGEST_LENGTH];
+    SHA256(reinterpret_cast<const unsigned char*>(message.data()), message.size(), digest);
+    EVP_PKEY_CTX* verify_context = EVP_PKEY_CTX_new_from_pkey(nullptr, key, nullptr);
+    assert(verify_context != nullptr);
+    assert(EVP_PKEY_verify_init(verify_context) > 0);
+    assert(EVP_PKEY_CTX_set_rsa_padding(verify_context, RSA_PKCS1_PSS_PADDING) > 0);
+    assert(EVP_PKEY_CTX_set_signature_md(verify_context, EVP_sha256()) > 0);
+    assert(EVP_PKEY_CTX_set_rsa_mgf1_md(verify_context, EVP_sha256()) > 0);
+    assert(EVP_PKEY_CTX_set_rsa_pss_saltlen(verify_context, 32) > 0);
+    assert(EVP_PKEY_verify(verify_context,
+        reinterpret_cast<const unsigned char*>(decoded.data()), decoded.size(), digest, sizeof(digest)) == 1);
+    EVP_PKEY_CTX_free(verify_context);
     EVP_PKEY_free(key);
 
     std::cout << "C++ SDK tests passed\n";
