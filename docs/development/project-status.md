@@ -27,8 +27,8 @@
 | 授权管理 | LicenseManagement Controller/Service、生成/状态/解绑接口 | 部分实现 | 批量导入导出、续费、冻结恢复、审计及套餐额度闭环 |
 | 支付核心 | 订单、回调、收银台、渠道管理及多个 Adapter/Signer | 部分实现 | 支付宝/微信官方渠道、商户真实联调、查单对账和异常补偿 |
 | CNY/USDT | PaymentCurrency、支付架构与币种决策文档 | 已有基础实现 | 钱包、流水、跨模块账务一致性集成测试 |
-| 代理额度/钱包/财务 | schema 001 已有 CNY/USDT 独立钱包账户与余额流水；支付回调已实现成功充值入账；PR [#34](https://github.com/seanldnet/Auth/pull/34) 正补齐新用户钱包初始化和历史用户回填 | 部分实现 | 代理授权额度账本/流水、钱包管理查询、管理员手动充值/冲正、账务 API 与集成验收仍缺失 |
-| 管理员/代理 API Key | 已在 PR [#33](https://github.com/seanldnet/Auth/pull/33) 开发凭据表、AES-256-GCM Secret 保存、签名规范、Nonce 防重放中间件、Key 管理接口及用户/下级查询路由 | 开发中（PR 待 CI/审核） | 授权开通/更换/查询业务路由仍需与额度账本联动；限流、Nonce 清理任务及 MySQL 集成测试待完成 |
+| 代理额度/钱包/财务 | schema 001 已有 CNY/USDT 独立钱包账户与余额流水；支付回调已实现成功充值入账；PR [#34](https://github.com/seanldnet/Auth/pull/34) 正补齐新用户钱包初始化和历史用户回填（CI 待运行） | 部分实现 | 代理授权额度账本/流水、钱包管理查询、管理员手动充值/冲正、账务 API 与集成验收仍缺失 |
+| 管理员/代理 API Key | 已在 PR [#33](https://github.com/seanldnet/Auth/pull/33) 开发凭据表、AES-256-GCM Secret 保存、签名规范、Nonce 防重放中间件、Key 管理接口及用户/下级查询路由 | 开发中（PR #33 CI 全部通过，待人工审核/合并） | 授权开通/更换/查询业务路由仍需与额度账本联动；限流、Nonce 清理任务及 MySQL 集成测试待完成 |
 | 前端 | 登录、注册、仪表盘、账户、软件、授权、用户、充值、支付订单/支付等页面 | 部分实现 | 代理、额度、钱包、API Key、审计等页面；统一交互和响应式验收 |
 | shadcn/ui | `frontend/components.json`；当前 `src/components/ui` 可见 badge/button/card/input | 组件覆盖不足 | 继续使用 shadcn/ui 扩展，不得自制替代体系 |
 | SDK | `sdk/` 下 C#、C++、C、Go、Java、Kotlin、PHP、Python、Rust、TypeScript、易语言目录 | 多语言代码已提交 | 按语言验证构建/测试；易语言需真实 IDE 与 32/64 位联调 |
@@ -120,7 +120,7 @@
 ## 8. 本轮文档同步记录
 
 - 修正 README 的过时阶段描述。
-- 2026-11-27 开始实现管理员/代理 API Key 基础能力，见 PR #33；该 PR 尚未完成最终 CI/审核，不能计入已验收功能。
+- 2026-11-27 开始实现管理员/代理 API Key 基础能力，见 PR #33；该 PR CI 已全部通过，但仍待人工审核/合并，不能计入主分支已交付功能。
 - 2026-11-27 复核支付 schema 后确认钱包账户/余额流水早已存在；补充记录并新增钱包初始化修复 PR #34，避免将已有功能误报为缺失。
 - 增加本进度台账并链接到 README。
 - 将“代码存在”“自动化测试通过”“真实联调/生产验收”分开标注。
