@@ -13,6 +13,22 @@ use think\response\Json;
 
 final class AgentLicenseIssuance
 {
+    public function index(Request $request): Json
+    {
+        $actor = AuthContext::get($request);
+        if ($actor === null || !in_array(($actor['role'] ?? ''), ['AGENT', 'SUB_AGENT'], true)) {
+            return json(['success' => false, 'message' => '只有代理或下级代理可以查询本人签发的授权。'], 403);
+        }
+        $result = (new AgentLicenseIssuanceService())->listForAgent(
+            (int)$actor['id'],
+            (int)$request->get('page', 1),
+            (int)$request->get('page_size', 20),
+            strtoupper((string)$request->get('status', '')),
+            trim((string)$request->get('keyword', '')),
+        );
+        return json(['success' => true, 'data' => $result]);
+    }
+
     public function create(Request $request): Json
     {
         $actor = AuthContext::get($request);
