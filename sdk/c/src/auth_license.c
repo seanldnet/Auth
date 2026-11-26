@@ -15,7 +15,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <pthread.h>
+#endif
 
 #define MAX_RESPONSE_BYTES (1024U * 1024U)
 
@@ -33,8 +37,13 @@ struct response_buffer {
     size_t capacity;
 };
 
+#ifdef _WIN32
+static INIT_ONCE crypto_once = INIT_ONCE_STATIC_INIT;
+static INIT_ONCE curl_once = INIT_ONCE_STATIC_INIT;
+#else
 static pthread_once_t crypto_once = PTHREAD_ONCE_INIT;
 static pthread_once_t curl_once = PTHREAD_ONCE_INIT;
+#endif
 static int crypto_ready = 0;
 static int curl_ready = 0;
 
@@ -45,6 +54,20 @@ static void initialize_crypto(void) {
 static void initialize_curl(void) {
     curl_ready = curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK;
 }
+
+#ifdef _WIN32
+static BOOL CALLBACK initialize_crypto_callback(PINIT_ONCE once, PVOID parameter, PVOID *context) {
+    (void)once; (void)parameter; (void)context; initialize_crypto(); return TRUE;
+}
+static BOOL CALLBACK initialize_curl_callback(PINIT_ONCE once, PVOID parameter, PVOID *context) {
+    (void)once; (void)parameter; (void)context; initialize_curl(); return TRUE;
+}
+static void ensure_crypto_initialized(void) { InitOnceExecuteOnce(&crypto_once, initialize_crypto_callback, NULL, NULL); }
+static void ensure_curl_initialized(void) { InitOnceExecuteOnce(&curl_once, initialize_curl_callback, NULL, NULL); }
+#else
+static void ensure_crypto_initialized(void) { pthread_once(&crypto_once, initialize_crypto); }
+static void ensure_curl_initialized(void) { pthread_once(&curl_once, initialize_curl); }
+#endif
 
 static char *duplicate_string(const char *value) {
     if (value == NULL) return NULL;
@@ -101,7 +124,7 @@ char *auth_license_build_canonical_message(const char *method, const char *path,
 
 char *auth_license_sign_rsa_pss_sha256(EVP_PKEY *private_key, const char *message) {
     if (private_key == NULL || message == NULL) return NULL;
-    pthread_once(&crypto_once, initialize_crypto);
+    ensure_crypto_initialized();
     if (!crypto_ready) return NULL;
     unsigned char digest[SHA256_DIGEST_LENGTH];
     SHA256((const unsigned char *)message, strlen(message), digest);
@@ -167,8 +190,8 @@ auth_license_client *auth_license_client_new(const char *base_url, const char *a
         set_error(error_message, "A private key and timeout between 1 and 120 seconds are required.");
         return NULL;
     }
-    pthread_once(&crypto_once, initialize_crypto);
-    pthread_once(&curl_once, initialize_curl);
+    ensure_crypto_initialized();
+    ensure_curl_initialized();
     if (!crypto_ready || !curl_ready) {
         set_error(error_message, "Unable to initialize OpenSSL or libcurl.");
         return NULL;
