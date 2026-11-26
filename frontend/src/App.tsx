@@ -9,17 +9,21 @@ import { TopUpPage } from "@/pages/top-up";
 import { PaymentOrdersPage } from "@/pages/payment-orders";
 import { SoftwarePage } from "@/pages/software";
 import { LicensesPage } from "@/pages/licenses";
+import { UsersPage } from "@/pages/users";
+import { RegisterPage } from "@/pages/register";
 
 export default function App() {
   return (
     <Routes>
       <Route path="/checkout/:orderNo/:token" element={<CheckoutPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
       <Route path="/change-password" element={<ChangePasswordPage />} />
       <Route element={<AdminLayout />}>
         <Route path="/" element={<DashboardPage />} />
         <Route path="/apps" element={<SoftwarePage />} />
         <Route path="/licenses" element={<LicensesPage />} />
+        <Route path="/users" element={<UsersPage />} />
         <Route path="/payments" element={<PaymentsPage />} />
         <Route path="/top-up" element={<TopUpPage />} />
         <Route path="/payment-orders" element={<PaymentOrdersPage />} />
