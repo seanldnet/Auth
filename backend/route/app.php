@@ -17,6 +17,7 @@ Route::post('api/auth/login', 'Auth/login');
 Route::post('api/auth/register', 'UserManagement/register');
 Route::post('api/auth/transfer-request', 'UserTransfer/request')->middleware(AuthMiddleware::class);
 Route::get('api/users', 'UserManagement/index')->middleware(AuthMiddleware::class);
+Route::get('api/license-quotas/:quotaId/transactions', 'AgentLicenseQuota/transactions')->middleware(AuthMiddleware::class);
 Route::get('api/license-quotas', 'AgentLicenseQuota/index')->middleware(AuthMiddleware::class);
 Route::post('api/admin/license-quotas', 'AgentLicenseQuota/allocate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/licenses', 'AgentLicenseIssuance/index')->middleware(AuthMiddleware::class);
