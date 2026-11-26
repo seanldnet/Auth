@@ -21,7 +21,7 @@ int main() {
     }
     assert(rejected_query);
 
-    EVP_PKEY_CTX* key_context = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr);
+    EVP_PKEY_CTX* key_context = EVP_PKEY_CTX_new_from_name(nullptr, "RSA", nullptr);
     assert(key_context != nullptr);
     assert(EVP_PKEY_keygen_init(key_context) > 0);
     assert(EVP_PKEY_CTX_set_rsa_keygen_bits(key_context, 3072) > 0);
