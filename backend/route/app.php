@@ -43,6 +43,8 @@ Route::get('api/admin/software/:softwareId/signing-keys', 'SoftwareKeys/index')-
 Route::post('api/admin/software/:softwareId/signing-keys', 'SoftwareKeys/add')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::patch('api/admin/software/:softwareId/signing-keys/:keyId/revoke', 'SoftwareKeys/revoke')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/software/:softwareId/plans', 'SoftwareCatalog/planIndex')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::get('api/admin/software/:softwareId/licenses/export', 'LicenseManagement/export')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/admin/software/:softwareId/licenses/import', 'LicenseManagement/import')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/software/:softwareId/licenses', 'LicenseManagement/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::post('api/admin/software/:softwareId/licenses', 'LicenseManagement/generate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::patch('api/admin/licenses/:licenseId/status', 'LicenseManagement/status')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
