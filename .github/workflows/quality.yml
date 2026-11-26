@@ -146,3 +146,22 @@ jobs:
       - name: Build and test TypeScript SDK
         run: npm test
         working-directory: sdk/typescript
+
+  php-sdk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: curl, json
+          coverage: none
+      - name: Install PHP SDK dependencies
+        run: composer install --no-interaction --prefer-dist
+        working-directory: sdk/php
+      - name: Check PHP SDK syntax
+        run: composer check:syntax
+        working-directory: sdk/php
+      - name: Run PHP SDK tests
+        run: composer test
+        working-directory: sdk/php
