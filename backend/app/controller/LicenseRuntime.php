@@ -48,6 +48,22 @@ final class LicenseRuntime
         ));
     }
 
+    public function offlineLease(Request $request): Json
+    {
+        return $this->respond($request, fn(array $p) => (new \\app\\license\\OfflineLicenseLeaseService())->issue(
+            (string)($p['app_id'] ?? ''), (string)($p['license_key'] ?? ''),
+            (string)($p['device_fingerprint'] ?? ''), (string)$request->ip(),
+            (string)$request->header('user-agent', ''),
+        ));
+    }
+
+    public function platformKeys(Request $request): Json
+    {
+        return $this->respond($request, fn(array $p) => [
+            'keys' => (new \\app\\license\\OfflineLicenseLeaseService())->platformKeys((string)($p['app_id'] ?? '')),
+        ]);
+    }
+
     private function respond(Request $request, callable $operation, int $status = 200): Json
     {
         $payload = RequestPayload::all($request);
