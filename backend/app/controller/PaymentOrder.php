@@ -71,6 +71,12 @@ final class PaymentOrder
         $pageSize = max(1, min(50, (int) $request->get('page_size', 20)));
         $userId = (int) $user['id'];
 
+        $registry = new PaymentChannelRegistry();
+        $registry->register(new EpusdtAdapter());
+        $registry->register(new GmpayAdapter());
+        $registry->register(new EpayAdapter());
+        $orderService = new PaymentOrderService($registry);
+
         $total = Db::name('payment_orders')->where('user_id', $userId)->count();
         $rows = Db::name('payment_orders')
             ->where('user_id', $userId)
@@ -93,6 +99,9 @@ final class PaymentOrder
                 'created_at' => (string) $row['created_at'],
                 'expires_at' => $row['expires_at'] !== null ? (string) $row['expires_at'] : null,
                 'paid_at' => $row['paid_at'] !== null ? (string) $row['paid_at'] : null,
+                'checkout_url' => in_array((string) $row['status'], ['CREATING', 'PENDING'], true)
+                    ? $orderService->checkoutUrlForUser($userId, (string) $row['order_no'])
+                    : null,
             ];
         }
 
