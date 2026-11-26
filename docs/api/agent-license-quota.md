@@ -42,6 +42,13 @@
 
 成功返回本次生成的授权码（仅生成时返回明文）、生成数量和剩余可用额度。额度不足、软件/套餐停用、幂等键重复或授权生成失败时，不会产生部分授权或部分扣减。
 
+
+### GET /api/licenses
+代理/下级代理仅查询本人签发的授权记录，支持 page、page_size、status、keyword。不会返回完整授权码明文。
+
+### GET /api/license-quotas/{quotaId}/transactions
+管理员可查询任意额度账户流水；代理/下级代理只能查询本人额度账户流水。
+
 ## 数据表
 - auth_agent_license_quotas：每个用户/软件/套餐一个额度账户。
 - auth_agent_license_quota_transactions：管理员分配和授权生成消耗流水；流水不可变。
