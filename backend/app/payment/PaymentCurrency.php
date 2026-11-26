@@ -20,7 +20,12 @@ enum PaymentCurrency: string
     {
         if ($this === self::CNY) {
             [$integer, $fraction] = array_pad(explode('.', $amount, 2), 2, '');
-            return $this->displaySymbol() . $integer . '.' . str_pad(substr($fraction, 0, 2), 2, '0');
+            $fraction = rtrim($fraction, '0');
+            if (strlen($fraction) > 2) {
+                throw new \\InvalidArgumentException('CNY display amount exceeds two decimal places.');
+            }
+
+            return $this->displaySymbol() . $integer . '.' . str_pad($fraction, 2, '0');
         }
 
         return $amount . ' ' . $this->displaySymbol();
