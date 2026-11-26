@@ -168,7 +168,7 @@ final class SoftwareCatalogService
         if (!in_array($currency, ['CNY','USDT'], true) || !in_array($status, ['ACTIVE','DISABLED'], true)) {
             throw new InvalidArgumentException('套餐币种或状态无效。');
         }
-        if (!preg_match('/^(?:0|[1-9]\d{0,11})(?:\.\d{1,8})?$/', $price) || (float)$price < 0) {
+        if (!preg_match('/^(?:0|[1-9]\d{0,11})(?:\.\d{1,8})?$/', $price)) {
             throw new InvalidArgumentException('套餐价格必须为非负十进制数，最多 8 位小数。');
         }
         if (mb_strlen($description) > 500) {
