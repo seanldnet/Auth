@@ -15,6 +15,7 @@
 - licenses.create
 - licenses.read
 - licenses.renew
+- licenses.replace
 - users.read
 - users.children.read
 - quotas.read
@@ -32,6 +33,7 @@ Header：Authorization: Bearer ak_<64 位十六进制密钥>
 - GET /api/licenses：仅查询本人签发授权；代理可用。
 - POST /api/licenses：按本人额度签发授权；必须传 Idempotency-Key。
 - POST /api/licenses/{licenseId}/renew：续费本人签发授权，需 licenses.renew 权限和 Idempotency-Key。
+- POST /api/licenses/{licenseId}/replace：更换本人签发授权，需 licenses.replace 权限和 Idempotency-Key。
 - GET /api/users：按当前代理角色查询其可见用户范围。
 - GET /api/license-quotas：仅查询本人额度账户。
 - GET /api/v1/licenses、POST /api/v1/licenses、POST /api/v1/licenses/{licenseId}/renew：兼容的版本化授权接口。
