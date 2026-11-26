@@ -18,4 +18,10 @@ final class PaymentCurrencyTest extends TestCase
             PaymentCurrency::USDT->displayAmount('100.00'),
         );
     }
+    public function testCnyDisplayRejectsMoreThanTwoNonZeroDecimalPlaces(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        PaymentCurrency::CNY->displayAmount('100.001');
+    }
+
 }
