@@ -23,6 +23,7 @@ import { MonitoringPage } from "@/pages/monitoring";
 import { RegionsPage } from "@/pages/regions";
 import { ApiKeysPage } from "@/pages/api-keys";
 import { NotificationsPage } from "@/pages/notifications";
+import { WalletManagementPage } from "@/pages/wallet-management";
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/payments" element={<PaymentsPage />} />
         <Route path="/top-up" element={<TopUpPage />} />
+        <Route path="/wallet-management" element={<WalletManagementPage />} />
         <Route path="/payment-orders" element={<PaymentOrdersPage />} />
         <Route path="/security-keys" element={<SecurityKeysPage />} />
         <Route path="/api-keys" element={<ApiKeysPage />} />
