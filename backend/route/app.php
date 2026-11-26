@@ -51,6 +51,9 @@ Route::post('api/admin/software/:softwareId/plans', 'SoftwareCatalog/planCreate'
 Route::put('api/admin/software/:softwareId/plans/:planId', 'SoftwareCatalog/planUpdate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/wallet-display-unit', 'WalletSettings/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::put('api/admin/wallet-display-unit', 'WalletSettings/save')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::get('api/admin/regions', 'RegionNodes/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::post('api/admin/regions', 'RegionNodes/create')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::put('api/admin/regions/:regionId', 'RegionNodes/update')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/system-health', 'SystemHealth/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/audit-logs', 'AuditLogs/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/payment-channels', 'PaymentChannelAdmin/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
