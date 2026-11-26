@@ -31,6 +31,24 @@ final class AgentLicenseQuota
         }
     }
 
+    public function transactions(Request $request, string $quotaId): Json
+    {
+        $actor = AuthContext::get($request);
+        if ($actor === null) return json(['success' => false, 'message' => '请先登录'], 401);
+        try {
+            $data = (new AgentLicenseQuotaService())->transactions(
+                $actor, (int)$quotaId,
+                (int)$request->get('page', 1),
+                (int)$request->get('page_size', 20),
+            );
+            return json(['success' => true, 'data' => $data]);
+        } catch (InvalidArgumentException $exception) {
+            return json(['success' => false, 'message' => $exception->getMessage()], 422);
+        } catch (RuntimeException $exception) {
+            return json(['success' => false, 'message' => $exception->getMessage()], 403);
+        }
+    }
+
     public function allocate(Request $request): Json
     {
         $actor = AuthContext::get($request);
