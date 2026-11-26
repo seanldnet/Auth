@@ -31,6 +31,7 @@ const groups: { title: string; items: NavItem[] }[] = [
   ]},
   { title: "财务中心", items: [
     { label: "账户充值", to: "/top-up", icon: Wallet, roles: allRoles },
+    { label: "钱包管理", to: "/wallet-management", icon: Wallet, roles: adminRoles },
     { label: "充值记录", to: "/payment-orders", icon: ReceiptText, roles: allRoles },
     { label: "支付渠道", to: "/payments", icon: CreditCard, roles: adminRoles },
   ]},
