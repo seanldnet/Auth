@@ -157,6 +157,23 @@ final class LicenseManagementService
     }
 
     /** @return array<string,mixed> */
+    public function unbindDevice(int $licenseId, int $actorId, string $ip, string $userAgent): array
+    {
+        return Db::transaction(function () use ($licenseId, $actorId, $ip, $userAgent): array {
+            $rows = Db::query('SELECT id, status, device_fingerprint_hash, device_label FROM auth_licenses WHERE id = ? FOR UPDATE', [$licenseId]);
+            $license = $rows[0] ?? null;
+            if (!is_array($license)) throw new RuntimeException('授权记录不存在。');
+            if ($license['status'] !== 'ACTIVE' || $license['device_fingerprint_hash'] === null) {
+                throw new RuntimeException('该授权当前没有可解绑的设备。');
+            }
+            $before = ['device_fingerprint_hash' => $license['device_fingerprint_hash'], 'device_label' => $license['device_label']];
+            Db::execute('UPDATE auth_licenses SET device_fingerprint_hash = NULL, device_label = NULL, updated_at = UTC_TIMESTAMP() WHERE id = ?', [$licenseId]);
+            $this->event($licenseId, $actorId, 'LICENSE_ADMIN_DEVICE_UNBOUND', $before, ['device_fingerprint_hash' => null, 'device_label' => null], $ip, $userAgent);
+            return $this->publicLicense($licenseId);
+        });
+    }
+
+    /** @return array<string,mixed> */
     private function publicLicense(int $id): array
     {
         $rows = Db::query(
