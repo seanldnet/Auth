@@ -35,7 +35,9 @@ int main() {
                                              reinterpret_cast<const unsigned char*>(encoded.data()),
                                              static_cast<int>(encoded.size()));
     assert(decoded_size > 0);
-    decoded.resize(static_cast<std::size_t>(decoded_size) - (encoded.ends_with("==") ? 2 : encoded.ends_with("=") ? 1 : 0));
+    const std::size_t padding = encoded.size() >= 2 && encoded.compare(encoded.size() - 2, 2, "==") == 0 ? 2
+        : (!encoded.empty() && encoded.back() == '=' ? 1 : 0);
+    decoded.resize(static_cast<std::size_t>(decoded_size) - padding);
 
     EVP_MD_CTX* verify_context = EVP_MD_CTX_new();
     EVP_PKEY_CTX* verify_key_context = nullptr;
