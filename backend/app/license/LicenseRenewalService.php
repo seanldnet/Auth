@@ -58,7 +58,7 @@ final class LicenseRenewalService
             } else {
                 if ($previous === null) throw new RuntimeException('永久授权无需续费，不能改为有限期限套餐。');
                 $base = $previous > $now ? $previous : $now;
-                $nextExpiry = $this->addDuration($base, $unit, (int)$plan['duration_value']);
+                $nextExpiry = LicenseTermCalculator::expiresAt($base, $unit, (int)$plan['duration_value']);
             }
 
             $quotaConsumed = false;
@@ -129,21 +129,4 @@ final class LicenseRenewalService
         });
     }
 
-    private function addDuration(DateTimeImmutable $base, string $unit, int $value): DateTimeImmutable
-    {
-        if ($value < 1) throw new RuntimeException('套餐续费时长配置无效。');
-        if ($unit === 'DAY') return $base->modify('+' . $value . ' days');
-        if ($unit === 'MONTH') {
-            $day = (int)$base->format('d');
-            $target = $base->modify('first day of this month')->modify('+' . $value . ' months');
-            return $target->setDate((int)$target->format('Y'), (int)$target->format('m'), min($day, (int)$target->format('t')));
-        }
-        if ($unit === 'YEAR') {
-            $year = (int)$base->format('Y') + $value;
-            $month = (int)$base->format('m');
-            $day = min((int)$base->format('d'), (int)$base->setDate($year, $month, 1)->format('t'));
-            return $base->setDate($year, $month, $day);
-        }
-        throw new RuntimeException('不支持的续费套餐时长单位。');
-    }
 }
