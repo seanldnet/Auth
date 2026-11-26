@@ -2,10 +2,12 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cctype>
 #include <cstdint>
 #include <mutex>
 #include <regex>
 #include <vector>
+#include <utility>
 
 #include <curl/curl.h>
 #include <openssl/bio.h>
