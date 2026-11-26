@@ -21,14 +21,14 @@ int main() {
     } catch (const std::invalid_argument&) {
         rejected_query = true;
     }
-    assert(rejected_query);
+    CHECK(rejected_query);
 
     EVP_PKEY_CTX* key_context = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, nullptr);
-    assert(key_context != nullptr);
-    assert(EVP_PKEY_keygen_init(key_context) > 0);
-    assert(EVP_PKEY_CTX_set_rsa_keygen_bits(key_context, 3072) > 0);
+    CHECK(key_context != nullptr);
+    CHECK(EVP_PKEY_keygen_init(key_context) > 0);
+    CHECK(EVP_PKEY_CTX_set_rsa_keygen_bits(key_context, 3072) > 0);
     EVP_PKEY* key = nullptr;
-    assert(EVP_PKEY_keygen(key_context, &key) > 0);
+    CHECK(EVP_PKEY_keygen(key_context, &key) > 0);
     EVP_PKEY_CTX_free(key_context);
 
     const std::string message = "signed request";
@@ -37,7 +37,7 @@ int main() {
     const int decoded_size = EVP_DecodeBlock(reinterpret_cast<unsigned char*>(decoded.data()),
                                              reinterpret_cast<const unsigned char*>(encoded.data()),
                                              static_cast<int>(encoded.size()));
-    assert(decoded_size > 0);
+    CHECK(decoded_size > 0);
     const std::size_t padding = encoded.size() >= 2 && encoded.compare(encoded.size() - 2, 2, "==") == 0 ? 2
         : (!encoded.empty() && encoded.back() == '=' ? 1 : 0);
     decoded.resize(static_cast<std::size_t>(decoded_size) - padding);
@@ -45,13 +45,13 @@ int main() {
     unsigned char digest[SHA256_DIGEST_LENGTH];
     SHA256(reinterpret_cast<const unsigned char*>(message.data()), message.size(), digest);
     EVP_PKEY_CTX* verify_context = EVP_PKEY_CTX_new(key, nullptr);
-    assert(verify_context != nullptr);
-    assert(EVP_PKEY_verify_init(verify_context) > 0);
-    assert(EVP_PKEY_CTX_set_rsa_padding(verify_context, RSA_PKCS1_PSS_PADDING) > 0);
-    assert(EVP_PKEY_CTX_set_signature_md(verify_context, EVP_sha256()) > 0);
-    assert(EVP_PKEY_CTX_set_rsa_mgf1_md(verify_context, EVP_sha256()) > 0);
-    assert(EVP_PKEY_CTX_set_rsa_pss_saltlen(verify_context, 32) > 0);
-    assert(EVP_PKEY_verify(verify_context,
+    CHECK(verify_context != nullptr);
+    CHECK(EVP_PKEY_verify_init(verify_context) > 0);
+    CHECK(EVP_PKEY_CTX_set_rsa_padding(verify_context, RSA_PKCS1_PSS_PADDING) > 0);
+    CHECK(EVP_PKEY_CTX_set_signature_md(verify_context, EVP_sha256()) > 0);
+    CHECK(EVP_PKEY_CTX_set_rsa_mgf1_md(verify_context, EVP_sha256()) > 0);
+    CHECK(EVP_PKEY_CTX_set_rsa_pss_saltlen(verify_context, 32) > 0);
+    CHECK(EVP_PKEY_verify(verify_context,
         reinterpret_cast<const unsigned char*>(decoded.data()), decoded.size(), digest, sizeof(digest)) == 1);
     EVP_PKEY_CTX_free(verify_context);
     EVP_PKEY_free(key);
