@@ -2,7 +2,11 @@
 #define AUTH_LICENSE_EASY_BRIDGE_H
 
 #ifdef _WIN32
+#ifdef AUTH_EASY_BRIDGE_BUILD
 #define AUTH_EASY_EXPORT __declspec(dllexport)
+#else
+#define AUTH_EASY_EXPORT __declspec(dllimport)
+#endif
 #define AUTH_EASY_CALL __stdcall
 #else
 #define AUTH_EASY_EXPORT __attribute__((visibility("default")))
