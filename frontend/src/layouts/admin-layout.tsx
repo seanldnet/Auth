@@ -87,7 +87,7 @@ export function AdminLayout() {
           </div>
         </div>
         <nav className="flex-1 space-y-1 p-4">
-          {navigation.filter(({ to }) => user.role === "ADMIN" || !["/payments", "/settings"].includes(to)).map(({ label, to, icon: Icon }) => (
+          {navigation.filter(({ to }) => user.role === "ADMIN" || !["/apps", "/licenses", "/users", "/payments", "/settings"].includes(to)).map(({ label, to, icon: Icon }) => (
             <NavLink key={to} to={to} className={({ isActive }) => cn(
               "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
               isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground",
