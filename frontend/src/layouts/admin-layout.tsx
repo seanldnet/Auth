@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Activity, AppWindow, CreditCard, KeyRound, LayoutDashboard, LogOut, Settings, Users, LoaderCircle, Wallet, ReceiptText } from "lucide-react";
+import { Activity, AppWindow, CreditCard, KeyRound, LayoutDashboard, LogOut, Settings, Users, LoaderCircle, Wallet, ReceiptText, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +9,7 @@ const navigation = [
   { label: "软件管理", to: "/apps", icon: AppWindow },
   { label: "授权管理", to: "/licenses", icon: KeyRound },
   { label: "用户与代理", to: "/users", icon: Users },
+  { label: "API 密钥", to: "/api-keys", icon: Key },
   { label: "账号信息", to: "/account", icon: Users },
   { label: "账户充值", to: "/top-up", icon: Wallet },
   { label: "充值记录", to: "/payment-orders", icon: ReceiptText },
