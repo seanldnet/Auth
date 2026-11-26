@@ -41,7 +41,7 @@ final class OfflineLicenseTokenTest extends TestCase
         $signature = (new PlatformSignatureService($signer))->signAndVerify('kms/key/1', $publicPem, $payloadJson);
         $token = OfflineLicenseToken::encode($payloadJson, $signature);
         $verified = OfflineLicenseToken::verify(
-            $token, $publicPem, $payload['app_id'], $payload['device_fingerprint_hash'], 1800000100,
+            $token, $publicPem, $payload['app_id'], $payload['device_fingerprint_hash'], $payload['key_id'], 1800000100,
         );
         self::assertSame($payload['lease_id'], $verified['lease_id']);
     }
@@ -64,7 +64,7 @@ final class OfflineLicenseTokenTest extends TestCase
         $this->expectException(RuntimeException::class);
         OfflineLicenseToken::verify(
             $tampered, $publicPem, 'app_0123456789abcdef01234567',
-            hash('sha256', 'device-fingerprint'), 1800000100,
+            hash('sha256', 'device-fingerprint'), 'pkey_0123456789abcdef', 1800000100,
         );
     }
 
@@ -84,13 +84,13 @@ final class OfflineLicenseTokenTest extends TestCase
         $this->expectException(RuntimeException::class);
         OfflineLicenseToken::verify(
             $token, $publicPem, 'app_0123456789abcdef01234567',
-            hash('sha256', 'device-b'), 1800000100,
+            hash('sha256', 'device-b'), 'pkey_0123456789abcdef', 1800000100,
         );
     }
 
     public function testMalformedTokenIsRejected(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        OfflineLicenseToken::verify('not-a-token', 'not-a-key', 'app_0123456789abcdef01234567', str_repeat('a', 64));
+        OfflineLicenseToken::verify('not-a-token', 'not-a-key', 'app_0123456789abcdef01234567', str_repeat('a', 64), 'pkey_0123456789abcdef');
     }
 }
