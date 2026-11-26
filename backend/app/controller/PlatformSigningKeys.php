@@ -40,7 +40,7 @@ final class PlatformSigningKeys
     {
         $payload = RequestPayload::all($request);
         try {
-            $actor = AuthContext::user();
+            $actor = AuthContext::get($request) ?? throw new RuntimeException('未获取到管理员会话。');
             $data = (new PlatformSigningKeyAdminService())->retire(
                 $keyId, (string)($payload['verify_until'] ?? ''), (int)$actor['id'],
             );
@@ -55,7 +55,7 @@ final class PlatformSigningKeys
     public function revoke(Request $request, string $keyId): Json
     {
         try {
-            $actor = AuthContext::user();
+            $actor = AuthContext::get($request) ?? throw new RuntimeException('未获取到管理员会话。');
             $data = (new PlatformSigningKeyAdminService())->revoke($keyId, (int)$actor['id']);
             return json(['success' => true, 'data' => $data]);
         } catch (RuntimeException $exception) {
