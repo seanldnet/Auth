@@ -265,7 +265,7 @@ final class LicenseManagementService
         $consumeRows = Db::query(
             "SELECT COUNT(*) AS aggregate FROM auth_agent_license_quota_transactions
              WHERE business_id = ? AND direction = 'CONSUME'
-               AND business_type IN ('LICENSE_ISSUE','LICENSE_RENEWAL')",
+               AND business_type IN ('LICENSE_ISSUE','LICENSE_RENEWAL','LICENSE_REPLACEMENT_IN')",
             [$licenseId],
         );
         $refundQuantity = (int)($consumeRows[0]['aggregate'] ?? 0);
