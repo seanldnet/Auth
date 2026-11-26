@@ -49,6 +49,7 @@ Route::patch('api/admin/users/:userId/status', 'UserTransfer/status')->middlewar
 Route::post('api/auth/logout', 'Auth/logout')->middleware(AuthMiddleware::class);
 Route::get('api/auth/me', 'Auth/me')->middleware(AuthMiddleware::class);
 Route::get('api/payments/channels', 'PaymentOrder/channels')->middleware(AuthMiddleware::class);
+Route::get('api/admin/payment-orders', 'PaymentOrderAdmin/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/payments/orders', 'PaymentOrder/index')->middleware(AuthMiddleware::class);
 Route::post('api/payments/orders', 'PaymentOrder/create')->middleware(AuthMiddleware::class);
 Route::post('api/auth/change-password', 'Auth/changePassword')->middleware(AuthMiddleware::class);
