@@ -37,6 +37,7 @@ Route::get('api/admin/software/:softwareId/plans', 'SoftwareCatalog/planIndex')-
 Route::get('api/admin/software/:softwareId/licenses', 'LicenseManagement/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::post('api/admin/software/:softwareId/licenses', 'LicenseManagement/generate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::patch('api/admin/licenses/:licenseId/status', 'LicenseManagement/status')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::patch('api/admin/licenses/:licenseId/unbind', 'LicenseManagement/unbindDevice')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::post('api/admin/software/:softwareId/plans', 'SoftwareCatalog/planCreate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::put('api/admin/software/:softwareId/plans/:planId', 'SoftwareCatalog/planUpdate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/payment-channels', 'PaymentChannelAdmin/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
