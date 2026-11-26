@@ -152,7 +152,7 @@ final class OfflineLicenseLeaseService
     public function platformKeys(string $appId): array
     {
         if (!preg_match('/^app_[a-f0-9]{24}$/i', trim($appId))) throw new InvalidArgumentException('软件 App ID 格式无效。');
-        $softwareRows = Db::query(\"SELECT id FROM auth_software_apps WHERE app_id = ? AND status = 'ACTIVE' LIMIT 1\", [trim($appId)]);
+        $softwareRows = Db::query("SELECT id FROM auth_software_apps WHERE app_id = ? AND status = 'ACTIVE' LIMIT 1", [trim($appId)]);
         if (!isset($softwareRows[0])) throw new RuntimeException('软件不存在或当前未启用。');
         return Db::query(
             "SELECT key_id, public_key_pem, algorithm, status, verify_until
