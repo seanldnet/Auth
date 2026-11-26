@@ -112,6 +112,35 @@ final class AgentLicenseQuotaService
     }
 
     /** @return array{items:list<array<string,mixed>>,total:int,page:int,page_size:int} */
+    public function transactions(array $actor, int $quotaId, int $page = 1, int $pageSize = 20): array
+    {
+        if ($quotaId < 1) throw new InvalidArgumentException('额度账户 ID 无效。');
+        $page = max(1, $page);
+        $pageSize = min(100, max(1, $pageSize));
+        $where = ['quota_id = ?'];
+        $params = [$quotaId];
+        if (($actor['role'] ?? '') !== 'ADMIN') {
+            if (!in_array(($actor['role'] ?? ''), ['AGENT', 'SUB_AGENT'], true)) {
+                throw new RuntimeException('当前账号没有查看额度流水的权限。');
+            }
+            $where[] = 'user_id = ?';
+            $params[] = (int)$actor['id'];
+        }
+        $clause = implode(' AND ', $where);
+        $count = Db::query("SELECT COUNT(*) AS aggregate FROM auth_agent_license_quota_transactions WHERE {$clause}", $params);
+        $total = (int)($count[0]['aggregate'] ?? 0);
+        $offset = ($page - 1) * $pageSize;
+        $items = Db::query(
+            "SELECT id, direction, quantity, available_before, available_after,
+                    actor_user_id, business_type, business_id, description, created_at
+             FROM auth_agent_license_quota_transactions
+             WHERE {$clause} ORDER BY id DESC LIMIT {$pageSize} OFFSET {$offset}",
+            $params,
+        );
+        return ['items' => $items, 'total' => $total, 'page' => $page, 'page_size' => $pageSize];
+    }
+
+    /** @return array{items:list<array<string,mixed>>,total:int,page:int,page_size:int} */
     public function list(array $actor, int $page = 1, int $pageSize = 20): array
     {
         $page = max(1, $page);
