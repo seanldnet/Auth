@@ -4,6 +4,10 @@ use app\middleware\AdminMiddleware;
 use think\facade\Route;
 
 Route::get('api/health', 'Health/index');
+Route::post('api/license/activate', 'LicenseRuntime/activate');
+Route::post('api/license/verify', 'LicenseRuntime/verify');
+Route::post('api/license/change-device', 'LicenseRuntime/changeDevice');
+Route::post('api/license/unbind', 'LicenseRuntime/unbind');
 Route::any('api/payments/callback/:channel', 'PaymentCallback/index');
 Route::get('api/payments/cashier/:orderNo/:token', 'PaymentCashier/index');
 Route::get('api/payments/cashier/:orderNo/:token/status', 'PaymentCashier/status');
@@ -33,6 +37,7 @@ Route::get('api/admin/software/:softwareId/plans', 'SoftwareCatalog/planIndex')-
 Route::get('api/admin/software/:softwareId/licenses', 'LicenseManagement/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::post('api/admin/software/:softwareId/licenses', 'LicenseManagement/generate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::patch('api/admin/licenses/:licenseId/status', 'LicenseManagement/status')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
+Route::patch('api/admin/licenses/:licenseId/unbind', 'LicenseManagement/unbindDevice')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::post('api/admin/software/:softwareId/plans', 'SoftwareCatalog/planCreate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::put('api/admin/software/:softwareId/plans/:planId', 'SoftwareCatalog/planUpdate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::get('api/admin/payment-channels', 'PaymentChannelAdmin/index')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
