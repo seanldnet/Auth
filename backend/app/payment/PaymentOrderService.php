@@ -36,7 +36,7 @@ final class PaymentOrderService
             throw new RuntimeException('A valid idempotency key is required.');
         }
 
-        $amount = self::normalizePositiveAmount($amount);
+        $amount = self::normalizePositiveAmount($amount, $currency);
         $channelCode = strtoupper($channelCode);
         $paymentType = trim((string) ($options['payment_type'] ?? ''));
         $token = trim((string) ($options['token'] ?? ''));
@@ -316,14 +316,21 @@ final class PaymentOrderService
         ];
     }
 
-    private static function normalizePositiveAmount(string $amount): string
+    private static function normalizePositiveAmount(string $amount, PaymentCurrency $currency): string
     {
         $normalized = PaymentCallbackProcessor::normalizeDecimal($amount);
         if ($normalized === '0') {
             throw new RuntimeException('Payment amount must be greater than zero.');
         }
 
-        return $amount;
+        if ($currency === PaymentCurrency::CNY) {
+            [, $fraction] = array_pad(explode('.', $normalized, 2), 2, '');
+            if (strlen($fraction) > 2) {
+                throw new RuntimeException('CNY amounts support at most two decimal places.');
+            }
+        }
+
+        return $normalized;
     }
 
     private static function checkoutToken(int $userId, string $orderNo, string $idempotencyKey): string
