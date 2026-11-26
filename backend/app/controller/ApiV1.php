@@ -21,11 +21,11 @@ final class ApiV1
         $actor = AuthContext::get($request);
         if ($actor === null) return json(['success' => false, 'message' => 'API Key 身份缺失'], 401);
         $softwareId = (int)$request->get('software_id', 0);
-        if ($softwareId < 1 && ($actor['role'] ?? '') === 'ADMIN') {
-            return json(['success' => false, 'message' => '管理员查询授权时必须指定 software_id'], 422);
-        }
         try {
             if (strtoupper($request->method()) === 'GET') {
+                if ($softwareId < 1 && ($actor['role'] ?? '') === 'ADMIN') {
+                    return json(['success' => false, 'message' => '管理员查询授权时必须指定 software_id'], 422);
+                }
                 $page = (int)$request->get('page', 1);
                 $pageSize = (int)$request->get('page_size', 20);
                 $status = strtoupper((string)$request->get('status', ''));
