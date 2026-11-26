@@ -124,7 +124,7 @@ char *auth_license_build_canonical_message(const char *method, const char *path,
 
 char *auth_license_sign_rsa_pss_sha256(EVP_PKEY *private_key, const char *message) {
     if (private_key == NULL || message == NULL) return NULL;
-    pthread_once(&crypto_once, initialize_crypto);
+    ensure_crypto_initialized();
     if (!crypto_ready) return NULL;
     unsigned char digest[SHA256_DIGEST_LENGTH];
     SHA256((const unsigned char *)message, strlen(message), digest);
@@ -191,7 +191,7 @@ auth_license_client *auth_license_client_new(const char *base_url, const char *a
         return NULL;
     }
     pthread_once(&crypto_once, initialize_crypto);
-    pthread_once(&curl_once, initialize_curl);
+    ensure_curl_initialized();
     if (!crypto_ready || !curl_ready) {
         set_error(error_message, "Unable to initialize OpenSSL or libcurl.");
         return NULL;
