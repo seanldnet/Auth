@@ -67,9 +67,8 @@ public sealed class LicenseClient : IDisposable
         var body = JsonSerializer.SerializeToUtf8Bytes(payload, JsonOptions);
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
         var nonce = Convert.ToHexString(RandomNumberGenerator.GetBytes(32)).ToLowerInvariant();
-        var bodyHash = Convert.ToHexString(SHA256.HashData(body)).ToLowerInvariant();
-        var canonical = string.Join("\n", "POST", path, timestamp, nonce, bodyHash);
-        var signature = _privateKey.SignData(Encoding.UTF8.GetBytes(canonical), HashAlgorithmName.SHA256, RSASignaturePadding.Pss);
+        var canonical = LicenseRequestSigner.BuildCanonicalMessage("POST", path, timestamp, nonce, body);
+        var signature = LicenseRequestSigner.Sign(_privateKey, canonical);
 
         using var request = new HttpRequestMessage(HttpMethod.Post, path);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
