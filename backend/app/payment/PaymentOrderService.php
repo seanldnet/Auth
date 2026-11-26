@@ -113,12 +113,9 @@ final class PaymentOrderService
             throw new RuntimeException('Currency conversion is disabled; provider and platform amounts must be identical.');
         }
 
-        $wallet = Db::name('wallet_accounts')
-            ->where('user_id', $userId)
-            ->where('currency', $currency->value)
-            ->find();
+        $wallet = Db::name('wallet_accounts')->where('user_id', $userId)->find();
         if (!is_array($wallet)) {
-            throw new RuntimeException('The user wallet is not initialized for the selected currency.');
+            throw new RuntimeException('The user wallet is not initialized.');
         }
 
         $orderNo = 'AU' . gmdate('YmdHis') . strtoupper(bin2hex(random_bytes(5)));
