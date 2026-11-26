@@ -15,6 +15,9 @@ final class AuthMiddleware
     {
         $cookieToken = (string) $request->cookie('auth_session', '');
         $authorization = (string) $request->header('authorization', '');
+        if ($cookieToken === '' && preg_match('/^Bearer\\s+ak_[a-f0-9]{64}$/i', $authorization)) {
+            return (new ApiKeyMiddleware())->handle($request, $next);
+        }
         $token = $cookieToken;
 
         if ($token === '' && preg_match('/^Bearer\s+([a-f0-9]{64})$/i', $authorization, $matches)) {
