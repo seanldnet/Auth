@@ -106,6 +106,14 @@ final class OfflineLicenseLeaseService
                 [(int)$license['id']],
             );
             $currentLicense = $currentLicenseRows[0] ?? null;
+            $currentKeyRows = Db::query(
+                'SELECT status FROM auth_platform_signing_keys WHERE id = ? LIMIT 1 FOR UPDATE',
+                [(int)$platformKey['id']],
+            );
+            $currentKey = $currentKeyRows[0] ?? null;
+            if (!is_array($currentKey) || $currentKey['status'] !== 'ACTIVE') {
+                throw new RuntimeException('平台签名密钥已轮换或撤销，拒绝签发离线凭证。');
+            }
             if (!is_array($currentSoftware) || $currentSoftware['status'] !== 'ACTIVE'
                 || (int)$currentSoftware['offline_days'] !== $offlineDays) {
                 throw new RuntimeException('软件离线授权配置已变化，请重新申请凭证。');
@@ -172,8 +180,4 @@ final class OfflineLicenseLeaseService
             . '-' . substr($hex, 16, 4) . '-' . substr($hex, 20, 12);
     }
 
-    private function base64UrlEncode(string $value): string
-    {
-        return rtrim(strtr(base64_encode($value), '+/', '-_'), '=');
-    }
 }
