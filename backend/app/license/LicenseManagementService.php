@@ -148,12 +148,83 @@ final class LicenseManagementService
                     'UPDATE auth_licenses SET status = ?, frozen_from_status = NULL, updated_at = UTC_TIMESTAMP() WHERE id = ?',
                     ['VOID', $licenseId],
                 );
+                $this->reverseAgentQuotaForVoidedLicense($license, $actorId);
             }
             $updatedRows = Db::query('SELECT status, frozen_from_status FROM auth_licenses WHERE id = ? LIMIT 1', [$licenseId]);
             $after = $updatedRows[0] ?? ['status' => $nextStatus];
             $this->event($licenseId, $actorId, 'LICENSE_' . $nextStatus, $before, $after, $ip, $userAgent);
             return $this->publicLicense($licenseId);
         });
+    }
+
+    /**
+     * Refunds exactly one consumed quota unit when an agent-issued license is voided.
+     * The unique ledger key makes this operation idempotent and the surrounding
+     * license-status transaction keeps the license and quota reversal atomic.
+     *
+     * @param array<string,mixed> $license
+     */
+    private function reverseAgentQuotaForVoidedLicense(array $license, int $actorId): void
+    {
+        $issuerId = (int)($license['issued_by_user_id'] ?? 0);
+        if ($issuerId < 1) return;
+
+        $issuerRows = Db::query(
+            "SELECT id, role FROM auth_users WHERE id = ? AND role IN ('AGENT','SUB_AGENT') LIMIT 1",
+            [$issuerId],
+        );
+        if (!isset($issuerRows[0])) return;
+
+        $quotaRows = Db::query(
+            'SELECT id, available_quantity, consumed_quantity
+             FROM auth_agent_license_quotas
+             WHERE user_id = ? AND software_id = ? AND plan_id = ?
+             LIMIT 1 FOR UPDATE',
+            [$issuerId, (int)$license['software_id'], (int)$license['plan_id']],
+        );
+        $quota = $quotaRows[0] ?? null;
+        if (!is_array($quota)) return;
+
+        $licenseId = (int)$license['id'];
+        $consumeRows = Db::query(
+            "SELECT id FROM auth_agent_license_quota_transactions
+             WHERE business_type = 'LICENSE_ISSUE' AND business_id = ?
+               AND direction = 'CONSUME' LIMIT 1",
+            [$licenseId],
+        );
+        if ($consumeRows === []) return;
+
+        $reversalKey = hash('sha256', 'license-void:' . $licenseId);
+        $existing = Db::query(
+            'SELECT id FROM auth_agent_license_quota_transactions WHERE idempotency_key = ? LIMIT 1',
+            [$reversalKey],
+        );
+        if ($existing !== []) return;
+
+        $availableBefore = (int)$quota['available_quantity'];
+        $availableAfter = $availableBefore + 1;
+        $consumedBefore = (int)$quota['consumed_quantity'];
+        if ($consumedBefore < 1) {
+            throw new RuntimeException('授权额度账本不一致，无法安全退回额度。');
+        }
+
+        Db::execute(
+            'UPDATE auth_agent_license_quotas
+             SET available_quantity = available_quantity + 1,
+                 consumed_quantity = consumed_quantity - 1,
+                 updated_at = UTC_TIMESTAMP()
+             WHERE id = ?',
+            [(int)$quota['id']],
+        );
+        Db::execute(
+            'INSERT INTO auth_agent_license_quota_transactions
+             (quota_id, user_id, software_id, plan_id, direction, quantity, available_before,
+              available_after, actor_user_id, business_type, business_id, idempotency_key, description, created_at)
+             VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
+            [(int)$quota['id'], $issuerId, (int)$license['software_id'], (int)$license['plan_id'],
+             'REVERSAL', $availableBefore, $availableAfter, $actorId, 'LICENSE_VOID',
+             $licenseId, $reversalKey, '授权作废，退回代理额度'],
+        );
     }
 
     /** @return array<string,mixed> */
