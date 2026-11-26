@@ -25,6 +25,7 @@ export function UsersPage() {
   const [role, setRole] = useState("");
   const [keyword, setKeyword] = useState("");
   const [poolOnly, setPoolOnly] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -36,13 +37,14 @@ export function UsersPage() {
   const [password, setPassword] = useState("");
   const [created, setCreated] = useState<User & {initial_password?:string}|null>(null);
   const [assignTarget, setAssignTarget] = useState<Record<number,string>>({});
+  const [transferTarget, setTransferTarget] = useState<Record<number,string>>({});
 
   const load = useCallback(async () => {
     setLoading(true); setError("");
     try {
       const [me, data] = await Promise.all([
         api<{user:{role:string}}>("/api/auth/me"),
-        api<PageData>(`/api/users?${new URLSearchParams({page:String(page),page_size:"20",role,keyword,pool:poolOnly?"1":""})}`),
+        api<PageData>(`/api/users?${new URLSearchParams({page:String(page),page_size:"20",role,keyword,status:statusFilter,pool:poolOnly?"1":""})}`),
       ]);
       setActor(me.user); setItems(data.items); setTotal(data.total);
       if (me.user.role === "ADMIN") {
@@ -54,7 +56,7 @@ export function UsersPage() {
       }
     } catch (cause) { setError(cause instanceof Error ? cause.message : "读取用户列表失败"); }
     finally { setLoading(false); }
-  }, [page, role, keyword, poolOnly]);
+  }, [page, role, keyword, poolOnly, statusFilter]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -88,6 +90,20 @@ export function UsersPage() {
     } catch (cause) { setError(cause instanceof Error ? cause.message : "审批失败"); }
   }
 
+  async function requestTransfer(userId:number) {
+    const target = transferTarget[userId];
+    if (target === undefined || target === "") { setError("请选择新的归属代理或公共用户池。"); return; }
+    const reason = window.prompt("请输入归属变更原因（可留空）：") || "";
+    try {
+      await api<User>(`/api/admin/users/${userId}/transfer-requests`, {
+        method:"POST",
+        body:JSON.stringify({target_parent_id:target === "POOL" ? null : Number(target), reason}),
+      });
+      setNotice("归属变更申请已创建，请在待审批列表中完成审批。");
+      await load();
+    } catch (cause) { setError(cause instanceof Error ? cause.message : "创建归属变更申请失败"); }
+  }
+
   async function changeStatus(item:User, status:"ACTIVE"|"DISABLED"|"LOCKED") {
     try {
       await api<User>("/api/admin/users/" + item.id + "/status", {method:"PATCH",body:JSON.stringify({status})});
@@ -111,9 +127,9 @@ export function UsersPage() {
       <Button type="submit" disabled={saving||!username.trim()||Boolean(password&&password.length<12)} className="self-start">{saving?<LoaderCircle className="size-4 animate-spin"/>:<UserPlus className="size-4"/>}{saving?"正在创建…":"创建账号"}</Button>
     </form></CardContent></Card> : null}
     <Card><CardHeader><CardTitle className="flex items-center gap-2 text-base"><Users className="size-4"/>账号列表</CardTitle><CardDescription>共 {total} 个账号。列表内容由后端按当前登录角色执行数据范围限制。</CardDescription></CardHeader><CardContent className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3"><Input value={keyword} onChange={e=>{setKeyword(e.target.value);setPage(1)}} placeholder="搜索登录账号"/><div className="flex flex-wrap gap-2">{["","AGENT","SUB_AGENT","USER"].filter(item=>actor?.role==="ADMIN"||item!=="AGENT").map(item=><Button key={item||"ALL"} size="sm" variant={role===item?"default":"outline"} onClick={()=>{setRole(item);setPage(1)}}>{item?roleLabel[item]:"全部角色"}</Button>)}</div>{actor?.role==="ADMIN"?<div className="flex flex-wrap items-center gap-2"><Button size="sm" variant={poolOnly?"default":"outline"} onClick={()=>{setPoolOnly(v=>!v);setPage(1)}}>{poolOnly?"正在查看公共用户池":"查看公共用户池"}</Button><span className="text-xs text-muted-foreground">未填写邀请码自主注册的用户会进入公共用户池</span></div>:null}</div>
+      <div className="flex flex-col gap-3"><Input value={keyword} onChange={e=>{setKeyword(e.target.value);setPage(1)}} placeholder="搜索登录账号"/><div className="flex flex-wrap gap-2">{["","AGENT","SUB_AGENT","USER"].filter(item=>actor?.role==="ADMIN"||item!=="AGENT").map(item=><Button key={item||"ALL"} size="sm" variant={role===item?"default":"outline"} onClick={()=>{setRole(item);setPage(1)}}>{item?roleLabel[item]:"全部角色"}</Button>)}</div>{actor?.role==="ADMIN"?<div className="flex flex-wrap items-center gap-2"><Button size="sm" variant={poolOnly?"default":"outline"} onClick={()=>{setPoolOnly(v=>!v);setPage(1)}}>{poolOnly?"正在查看公共用户池":"查看公共用户池"}</Button><span className="text-xs text-muted-foreground">未填写邀请码自主注册的用户会进入公共用户池</span></div>:null}<div className="flex flex-wrap gap-2">{[["","全部状态"],["ACTIVE","正常"],["DISABLED","已停用"],["LOCKED","已锁定"]].map(([value,label])=><Button key={value||"all-status"} size="sm" variant={statusFilter===value?"default":"outline"} onClick={()=>{setStatusFilter(value);setPage(1)}}>{label}</Button>)}</div></div>
       {loading?<div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground"><LoaderCircle className="size-4 animate-spin"/>正在读取账号</div>:items.length===0?<div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">暂无符合条件的账号。</div>:<div className="flex flex-col gap-3">{items.map(item=><div key={item.id} className="flex flex-col gap-3 rounded-lg border p-4 lg:flex-row lg:items-center lg:justify-between"><div className="flex min-w-0 flex-col gap-1"><div className="flex flex-wrap items-center gap-2"><strong>{item.username}</strong><Badge variant="outline">{roleLabel[item.role]}</Badge><Badge variant={item.status==="ACTIVE"?"success":"warning"}>{statusLabel[item.status]}</Badge></div><span className="text-xs text-muted-foreground">上级：{item.parent_username||"公共用户池 / 平台直属"} · 创建：{item.created_at||"—"} · 最近登录：{item.last_login_at||"尚未登录"}</span>{item.invite_code?<span className="text-xs text-muted-foreground">邀请码：{item.invite_code}</span>:null}</div>
-        {actor?.role==="ADMIN"&&poolOnly&&item.role==="USER"?<div className="flex flex-wrap items-center gap-2"><span className="text-xs text-muted-foreground">分配给：</span>{agents.filter(a=>a.status==="ACTIVE").map(a=><Button key={a.id} size="sm" variant={assignTarget[item.id]===String(a.id)?"default":"outline"} onClick={()=>setAssignTarget(s=>({...s,[item.id]:String(a.id)}))}>{a.username} · {roleLabel[a.role]}</Button>)}<Button size="sm" disabled={!assignTarget[item.id]} onClick={()=>void assign(item.id)}>确认分配</Button></div>:null}{actor?.role==="ADMIN"&&item.role!=="ADMIN"?<div className="flex flex-wrap gap-2">{item.status==="ACTIVE"?<><Button size="sm" variant="outline" onClick={()=>void changeStatus(item,"DISABLED")}>停用</Button><Button size="sm" variant="outline" onClick={()=>void changeStatus(item,"LOCKED")}>锁定</Button></>:<Button size="sm" onClick={()=>void changeStatus(item,"ACTIVE")}>恢复账号</Button>}</div>:null}
+        {actor?.role==="ADMIN"&&poolOnly&&item.role==="USER"?<div className="flex flex-wrap items-center gap-2"><span className="text-xs text-muted-foreground">分配给：</span>{agents.filter(a=>a.status==="ACTIVE").map(a=><Button key={a.id} size="sm" variant={assignTarget[item.id]===String(a.id)?"default":"outline"} onClick={()=>setAssignTarget(s=>({...s,[item.id]:String(a.id)}))}>{a.username} · {roleLabel[a.role]}</Button>)}<Button size="sm" disabled={!assignTarget[item.id]} onClick={()=>void assign(item.id)}>确认分配</Button></div>:null}{actor?.role==="ADMIN"&&item.role==="USER"?<div className="flex flex-wrap items-center gap-2"><span className="text-xs text-muted-foreground">调整归属：</span><select className="h-9 rounded-md border bg-background px-2 text-xs" value={transferTarget[item.id]??""} onChange={e=>setTransferTarget(s=>({...s,[item.id]:e.target.value}))}><option value="">选择代理 / 公共池</option><option value="POOL">公共用户池</option>{agents.filter(a=>a.status==="ACTIVE").map(a=><option key={a.id} value={a.id}>{a.username} · {roleLabel[a.role]}</option>)}</select><Button size="sm" variant="outline" disabled={transferTarget[item.id]===undefined||transferTarget[item.id]===""} onClick={()=>void requestTransfer(item.id)}>发起变更申请</Button></div>:null}{actor?.role==="ADMIN"&&item.role!=="ADMIN"?<div className="flex flex-wrap gap-2">{item.status==="ACTIVE"?<><Button size="sm" variant="outline" onClick={()=>void changeStatus(item,"DISABLED")}>停用</Button><Button size="sm" variant="outline" onClick={()=>void changeStatus(item,"LOCKED")}>锁定</Button></>:<Button size="sm" onClick={()=>void changeStatus(item,"ACTIVE")}>恢复账号</Button>}</div>:null}
       </div>)}</div>}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm text-muted-foreground"><span>第 {page} / {pages} 页</span><div className="flex gap-2"><Button size="sm" variant="outline" disabled={page<=1||loading} onClick={()=>setPage(p=>p-1)}>上一页</Button><Button size="sm" variant="outline" disabled={page>=pages||loading} onClick={()=>setPage(p=>p+1)}>下一页</Button></div></div>
     </CardContent></Card>
