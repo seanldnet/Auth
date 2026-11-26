@@ -17,9 +17,9 @@ final class ApiKeyService
     {
         $name = trim($name);
         if ($name === '' || mb_strlen($name, 'UTF-8') > 80) throw new InvalidArgumentException('API Key 名称不能为空且不能超过 80 字。');
-        $ownerRows = Db::query('SELECT id, role, status FROM auth_users WHERE id = ? LIMIT 1', [$ownerId]);
+        $ownerRows = Db::query('SELECT id, role, status, must_change_password FROM auth_users WHERE id = ? LIMIT 1', [$ownerId]);
         $owner = $ownerRows[0] ?? null;
-        if (!is_array($owner) || $owner['status'] !== 'ACTIVE' || !in_array($owner['role'], ['ADMIN','AGENT','SUB_AGENT'], true)) {
+        if (!is_array($owner) || $owner['status'] !== 'ACTIVE' || (int)($owner['must_change_password'] ?? 0) === 1 || !in_array($owner['role'], ['ADMIN','AGENT','SUB_AGENT'], true)) {
             throw new RuntimeException('只有启用状态的管理员、代理或下级代理可以创建 API Key。');
         }
 
