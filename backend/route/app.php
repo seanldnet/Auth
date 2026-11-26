@@ -30,6 +30,10 @@ Route::get('api/payments/orders', 'PaymentOrder/index')->middleware(AuthMiddlewa
 Route::post('api/payments/orders', 'PaymentOrder/create')->middleware(AuthMiddleware::class);
 Route::post('api/auth/change-password', 'Auth/changePassword')->middleware(AuthMiddleware::class);
 
+Route::get('api/api-keys', 'ApiKeys/index')->middleware(AuthMiddleware::class);
+Route::post('api/api-keys', 'ApiKeys/create')->middleware(AuthMiddleware::class);
+Route::patch('api/api-keys/:keyId/revoke', 'ApiKeys/revoke')->middleware(AuthMiddleware::class);
+
 Route::get('api/admin/software', 'SoftwareCatalog/softwareIndex')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::post('api/admin/software', 'SoftwareCatalog/softwareCreate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::put('api/admin/software/:softwareId', 'SoftwareCatalog/softwareUpdate')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
