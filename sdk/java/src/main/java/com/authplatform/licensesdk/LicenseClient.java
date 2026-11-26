@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -103,7 +102,7 @@ public final class LicenseClient {
         byte[] body = mapper.writeValueAsBytes(payload);
         String timestamp = Long.toString(System.currentTimeMillis() / 1000);
         byte[] nonceBytes = new byte[32];
-        SecureRandom.getInstanceStrong().nextBytes(nonceBytes);
+        new SecureRandom().nextBytes(nonceBytes);
         String nonce = java.util.HexFormat.of().formatHex(nonceBytes);
         String canonical = buildCanonicalMessage("POST", path, timestamp, nonce, body);
         Signature signer = Signature.getInstance("RSASSA-PSS");
