@@ -16,6 +16,8 @@ type PaymentOrder = {
   expires_at: string | null;
   paid_at: string | null;
   checkout_url: string | null;
+  username?: string;
+  display_amount?: string;
 };
 
 const statusMeta: Record<PaymentOrder["status"], { label: string; variant: "secondary" | "outline" | "success" | "warning" }> = {
@@ -33,12 +35,20 @@ export function PaymentOrdersPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [role, setRole] = useState("USER");
+  const [page, setPage] = useState(1);
+  const [keyword, setKeyword] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+
+  useEffect(() => { fetch("/api/auth/me", { credentials: "include", headers: { Accept: "application/json" } }).then(r=>r.json()).then(j=>{ if(j.success) setRole(j.data.user.role); }).catch(()=>undefined); }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/payments/orders?page=1&page_size=20", {
+      const endpoint = role === "ADMIN" ? "/api/admin/payment-orders" : "/api/payments/orders";
+      const params = new URLSearchParams({ page: String(page), page_size: "20", keyword: role === "ADMIN" ? keyword : "", status: role === "ADMIN" ? statusFilter : "" });
+      const response = await fetch(endpoint + "?" + params, {
         credentials: "include",
         headers: { Accept: "application/json" },
         cache: "no-store",
@@ -54,7 +64,7 @@ export function PaymentOrdersPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [role, page, keyword, statusFilter]);
 
   useEffect(() => {
     void load();
@@ -64,9 +74,9 @@ export function PaymentOrdersPage() {
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-col gap-2">
-          <p className="text-sm font-medium text-primary">账户中心 / 充值记录</p>
-          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">充值订单</h1>
-          <p className="text-sm text-muted-foreground">查看订单状态；未支付订单可以继续打开安全收银台。</p>
+          <p className="text-sm font-medium text-primary">{role === "ADMIN" ? "财务中心 / 全站订单" : "账户中心 / 充值记录"}</p>
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{role === "ADMIN" ? "全站充值订单" : "充值订单"}</h1>
+          <p className="text-sm text-muted-foreground">{role === "ADMIN" ? "管理员查看全站订单、支付渠道、用户和支付状态。" : "查看订单状态；未支付订单可以继续打开安全收银台。"}</p>
         </div>
         <Button variant="outline" onClick={() => void load()} disabled={loading}>
           <RefreshCw className={"size-4 " + (loading ? "animate-spin" : "")} />
@@ -82,7 +92,7 @@ export function PaymentOrdersPage() {
           </div>
           <History className="size-5 text-muted-foreground" />
         </CardHeader>
-        <CardContent className="flex flex-col gap-3">
+        <CardContent className="flex flex-col gap-3">\n          {role === "ADMIN" ? <div className="grid gap-3 sm:grid-cols-[1fr_200px]"><input className="h-10 rounded-md border bg-background px-3 text-sm" value={keyword} onChange={e=>{setKeyword(e.target.value);setPage(1);}} placeholder="搜索订单号 / 用户 / 交易号"/><select className="h-10 rounded-md border bg-background px-3 text-sm" value={statusFilter} onChange={e=>{setStatusFilter(e.target.value);setPage(1);}}><option value="">全部状态</option>{Object.entries(statusMeta).map(([k,v])=><option key={k} value={k}>{v.label}</option>)}</select></div> : null}
           {error ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</p> : null}
           {loading ? (
             <div className="flex items-center justify-center gap-3 py-8 text-sm text-muted-foreground">
@@ -103,18 +113,18 @@ export function PaymentOrdersPage() {
                 <div key={order.order_no} className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
                   <div className="flex min-w-0 flex-col gap-2">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold tabular-nums">{order.display_amount}</span>
+                      <span className="font-semibold tabular-nums">{order.display_amount || (order.currency === "CNY" ? "¥" + order.amount : order.amount + " USDT")}</span>
                       <Badge variant={status.variant}>{status.label}</Badge>
                       <Badge variant="outline">{order.currency}</Badge>
                     </div>
-                    <p className="break-all text-xs text-muted-foreground">{order.order_no}</p>
+                    <p className="break-all text-xs text-muted-foreground">{order.order_no}</p>\n                    {role === "ADMIN" && order.username ? <p className="text-xs text-muted-foreground">用户：{order.username}</p> : null}
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                       <span>{order.channel_code}</span>
                       <span>创建：{order.created_at}</span>
                       {order.paid_at ? <span>支付：{order.paid_at}</span> : null}
                     </div>
                   </div>
-                  {order.checkout_url && ["CREATING", "PENDING"].includes(order.status) ? (
+                  {role !== "ADMIN" && order.checkout_url && ["CREATING", "PENDING"].includes(order.status) ? (
                     <Button className="shrink-0" onClick={() => navigate(order.checkout_url!)}>
                       继续支付
                       <ExternalLink className="ml-2 size-4" />
