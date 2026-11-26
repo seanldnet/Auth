@@ -22,15 +22,25 @@ final class AuthSessionService
 
         $identityHash = hash('sha256', mb_strtolower($username, 'UTF-8'));
         $ipHash = hash('sha256', $ipAddress !== '' ? $ipAddress : 'unknown');
+        $identityGlobalIpHash = hash('sha256', '__identity_global__');
+        $ipGlobalIdentityHash = hash('sha256', '__ip_global__');
         $attemptRows = Db::query(
-            'SELECT failed_count, locked_until FROM auth_login_attempts WHERE identity_hash = ? AND ip_hash = ? LIMIT 1',
-            [$identityHash, $ipHash],
+            'SELECT locked_until FROM auth_login_attempts
+             WHERE (identity_hash = ? AND ip_hash = ?)
+                OR (identity_hash = ? AND ip_hash = ?)
+                OR (identity_hash = ? AND ip_hash = ?)',
+            [
+                $identityHash, $ipHash,
+                $identityHash, $identityGlobalIpHash,
+                $ipGlobalIdentityHash, $ipHash,
+            ],
         );
-        $attempt = $attemptRows[0] ?? null;
-        if (is_array($attempt) && !empty($attempt['locked_until'])
-            && strtotime((string) $attempt['locked_until'] . ' UTC') > time()
-        ) {
-            throw new RuntimeException('登录尝试次数过多，请稍后再试。');
+        foreach ($attemptRows as $attempt) {
+            if (!empty($attempt['locked_until'])
+                && strtotime((string) $attempt['locked_until'] . ' UTC') > time()
+            ) {
+                throw new RuntimeException('登录尝试次数过多，请稍后再试。');
+            }
         }
 
         $userRows = Db::query(
@@ -42,6 +52,8 @@ final class AuthSessionService
 
         if (!is_array($user) || !password_verify($password, (string) $user['password_hash'])) {
             $this->recordFailedAttempt($identityHash, $ipHash);
+            $this->recordFailedAttempt($identityHash, $identityGlobalIpHash);
+            $this->recordFailedAttempt($ipGlobalIdentityHash, $ipHash);
             $this->audit(null, 'LOGIN_FAILED', $ipAddress, $userAgent, [
                 'identity_hash' => $identityHash,
             ]);
@@ -68,8 +80,10 @@ final class AuthSessionService
         }
 
         Db::execute(
-            'DELETE FROM auth_login_attempts WHERE identity_hash = ? AND ip_hash = ?',
-            [$identityHash, $ipHash],
+            'DELETE FROM auth_login_attempts
+             WHERE (identity_hash = ? AND ip_hash = ?)
+                OR (identity_hash = ? AND ip_hash = ?)',
+            [$identityHash, $ipHash, $identityHash, $identityGlobalIpHash],
         );
 
         $token = bin2hex(random_bytes(32));
