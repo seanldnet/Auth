@@ -170,7 +170,7 @@ export function LicensesPage() {
         <Card className="border-amber-500/40">
           <CardHeader><CardTitle className="flex items-center gap-2 text-base"><ShieldAlert className="size-4" />新生成的授权码</CardTitle><CardDescription>离开此页面后将无法再次查看完整授权码。请立即复制并安全保存。</CardDescription></CardHeader>
           <CardContent className="flex flex-col gap-3">
-            <div className="max-h-72 overflow-auto rounded-md bg-muted p-3"><pre className="whitespace-pre-wrap break-all text-xs leading-6">{generated.map((item) => item.license_key).join("\n")}</pre></div>
+            <div className="max-h-72 overflow-auto rounded-md bg-muted p-3"><pre className="whitespace-pre-wrap break-all text-xs leading-6">{generated.map((item) => item.license_no + "  " + item.license_key).join("\n")}</pre></div>
             <div className="flex flex-wrap gap-2"><Button size="sm" onClick={() => void navigator.clipboard.writeText(generated.map((item) => item.license_key).join("\n"))}><Copy className="size-4" />复制全部授权码</Button><Button size="sm" variant="outline" onClick={() => void navigator.clipboard.writeText(generated.map((item) => `${item.license_no},${item.license_key}`).join("\n"))}>复制编号和授权码</Button><Button size="sm" variant="ghost" onClick={() => setGenerated([])}>关闭明文展示</Button></div>
           </CardContent>
         </Card>
