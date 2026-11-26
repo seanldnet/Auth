@@ -12,6 +12,7 @@ import { LicensesPage } from "@/pages/licenses";
 import { UsersPage } from "@/pages/users";
 import { RegisterPage } from "@/pages/register";
 import { AccountPage } from "@/pages/account";
+import { QuotasPage } from "@/pages/quotas";
 import { SettingsPage } from "@/pages/settings";
 
 export default function App() {
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/apps" element={<SoftwarePage />} />
         <Route path="/licenses" element={<LicensesPage />} />
+        <Route path="/quotas" element={<QuotasPage />} />
         <Route path="/users" element={<UsersPage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/payments" element={<PaymentsPage />} />
