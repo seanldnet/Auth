@@ -62,6 +62,9 @@ final class ApiKeyMiddleware
             || preg_match('#^api/v1/licenses/[0-9]+/replace$#', $path))) {
             $required = 'licenses.replace';
         }
+        if ($required === null && preg_match('#^api/license-quotas/[0-9]+/transactions$#', $path)) {
+            $required = 'quotas.read';
+        }
         if ($required === null || (!in_array('*', $scopes, true) && !in_array($required, $scopes, true))) {
             return json(['success' => false, 'message' => 'API Key 未授权此接口或请求方法'], 403);
         }
