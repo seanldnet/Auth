@@ -9,6 +9,10 @@ Route::get('api/payments/cashier/:orderNo/:token', 'PaymentCashier/index');
 Route::get('api/payments/cashier/:orderNo/:token/status', 'PaymentCashier/status');
 
 Route::post('api/auth/login', 'Auth/login');
+Route::post('api/auth/register', 'UserManagement/register');
+Route::get('api/users', 'UserManagement/index')->middleware(AuthMiddleware::class);
+Route::post('api/users', 'UserManagement/create')->middleware(AuthMiddleware::class);
+Route::post('api/admin/users/:userId/assign', 'UserManagement/assign')->middleware([AuthMiddleware::class, AdminMiddleware::class]);
 Route::post('api/auth/logout', 'Auth/logout')->middleware(AuthMiddleware::class);
 Route::get('api/auth/me', 'Auth/me')->middleware(AuthMiddleware::class);
 Route::get('api/payments/channels', 'PaymentOrder/channels')->middleware(AuthMiddleware::class);
