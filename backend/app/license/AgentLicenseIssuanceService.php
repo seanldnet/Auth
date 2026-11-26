@@ -84,15 +84,20 @@ final class AgentLicenseIssuanceService
                      updated_at = UTC_TIMESTAMP() WHERE id = ?',
                 [$quantity, $quantity, (int)$quota['id']],
             );
-            Db::execute(
-                'INSERT INTO auth_agent_license_quota_transactions
-                 (quota_id, user_id, software_id, plan_id, direction, quantity, available_before,
-                  available_after, actor_user_id, business_type, business_id, idempotency_key, description, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
-                [(int)$quota['id'], $actorId, $softwareId, $planId, 'CONSUME', $quantity, $before, $after,
-                 $actorId, 'LICENSE_ISSUE', (int)$created[0]['id'], $idempotencyKey,
-                 '代理批量生成授权码：' . $quantity . ' 个'],
-            );
+            foreach ($created as $index => $license) {
+                $availableBefore = $before - $index;
+                $availableAfter = $availableBefore - 1;
+                Db::execute(
+                    'INSERT INTO auth_agent_license_quota_transactions
+                     (quota_id, user_id, software_id, plan_id, direction, quantity, available_before,
+                      available_after, actor_user_id, business_type, business_id, idempotency_key, description, created_at)
+                     VALUES (?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
+                    [(int)$quota['id'], $actorId, $softwareId, $planId, 'CONSUME',
+                     $availableBefore, $availableAfter, $actorId, 'LICENSE_ISSUE',
+                     (int)$license['id'], hash('sha256', $idempotencyKey . ':' . (int)$license['id']),
+                     '代理生成授权码 ' . $license['license_no']],
+                );
+            }
 
             return ['licenses' => $created, 'quantity' => count($created), 'available_quantity' => $after];
         });
