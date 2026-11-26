@@ -20,18 +20,12 @@ class KotlinLicenseClientTest {
 
     @Test
     fun factoryRejectsNonHttpsEndpoints() {
-        val generator = KeyPairGenerator.getInstance("RSA")
-        generator.initialize(3072)
-        val key = generator.generateKeyPair().private
-        val pem = "-----BEGIN PRIVATE KEY-----\n" +
-            Base64.getMimeEncoder(64, "\n".toByteArray()).encodeToString(key.encoded) +
-            "\n-----END PRIVATE KEY-----"
         assertThrows(IllegalArgumentException::class.java) {
             KotlinLicenseClient.fromPem(
                 "http://license.example.com",
                 "app_0123456789abcdef01234567",
                 "key_0123456789abcdef",
-                pem,
+                "not-a-key",
             )
         }
     }
