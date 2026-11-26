@@ -9,6 +9,42 @@ use think\facade\Db;
 
 final class AgentLicenseIssuanceService
 {
+    /** @return array{items:list<array<string,mixed>>,total:int,page:int,page_size:int} */
+    public function listForAgent(int $actorId, int $page = 1, int $pageSize = 20, string $status = '', string $keyword = ''): array
+    {
+        $page = max(1, $page);
+        $pageSize = min(100, max(1, $pageSize));
+        $where = ['l.issued_by_user_id = ?'];
+        $params = [$actorId];
+        if ($status !== '') {
+            if (!in_array($status, ['GENERATED','ACTIVE','FROZEN','VOID','EXPIRED'], true)) {
+                throw new InvalidArgumentException('授权状态筛选值无效。');
+            }
+            $where[] = 'l.status = ?';
+            $params[] = $status;
+        }
+        if ($keyword !== '') {
+            $where[] = '(l.license_no LIKE ? OR l.license_key_hint LIKE ?)';
+            $term = '%' . mb_substr($keyword, 0, 80) . '%';
+            array_push($params, $term, $term);
+        }
+        $clause = implode(' AND ', $where);
+        $count = Db::query("SELECT COUNT(*) AS aggregate FROM auth_licenses l WHERE {$clause}", $params);
+        $total = (int)($count[0]['aggregate'] ?? 0);
+        $offset = ($page - 1) * $pageSize;
+        $items = Db::query(
+            "SELECT l.id, l.license_no, l.license_key_hint, l.software_id, s.name AS software_name,
+                    l.plan_id, p.name AS plan_name, l.owner_user_id, l.status, l.device_label,
+                    l.activated_at, l.expires_at, l.machine_change_count, l.created_at
+             FROM auth_licenses l
+             INNER JOIN auth_software_apps s ON s.id = l.software_id
+             INNER JOIN auth_license_plans p ON p.id = l.plan_id
+             WHERE {$clause} ORDER BY l.id DESC LIMIT {$pageSize} OFFSET {$offset}",
+            $params,
+        );
+        return ['items' => $items, 'total' => $total, 'page' => $page, 'page_size' => $pageSize];
+    }
+
     /** @return array{licenses:list<array{id:int,license_no:string,license_key:string}>,quantity:int,available_quantity:int} */
     public function issue(int $actorId, int $softwareId, int $planId, int $quantity, string $idempotencyKey, string $ip, string $userAgent): array
     {
