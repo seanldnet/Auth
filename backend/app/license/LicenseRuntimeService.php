@@ -122,7 +122,7 @@ final class LicenseRuntimeService
             $license = $rows[0] ?? null;
             if (!is_array($license) || $license['status'] !== 'ACTIVE') throw new RuntimeException('授权不存在或当前不可解绑。');
             if (!hash_equals((string)$license['device_fingerprint_hash'], $fingerprintHash)) throw new RuntimeException('设备指纹不匹配，不能解绑。');
-            $this->assertNotExpired($license);
+            if ($this->expireIfNeeded($license, $ip, $agent)) return ['valid' => false, 'status' => 'EXPIRED', 'message' => '授权已过期'];
             Db::execute('UPDATE auth_licenses SET device_fingerprint_hash = NULL, device_label = NULL, updated_at = UTC_TIMESTAMP() WHERE id = ?', [(int)$license['id']]);
             $this->event((int)$license['id'], 'LICENSE_DEVICE_UNBOUND', ['device_fingerprint_hash' => $fingerprintHash], ['device_fingerprint_hash' => null], $ip, $agent);
             $license['device_fingerprint_hash'] = null;
