@@ -20,6 +20,7 @@ import { SecurityKeysPage } from "@/pages/security-keys";
 import { AuditLogsPage } from "@/pages/audit-logs";
 import { DeveloperCenterPage } from "@/pages/developer-center";
 import { MonitoringPage } from "@/pages/monitoring";
+import { RegionsPage } from "@/pages/regions";
 
 export default function App() {
   return (
@@ -44,6 +45,7 @@ export default function App() {
         <Route path="/audit-logs" element={<AuditLogsPage />} />
         <Route path="/developer-center" element={<DeveloperCenterPage />} />
         <Route path="/monitoring" element={<MonitoringPage />} />
+        <Route path="/regions" element={<RegionsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
