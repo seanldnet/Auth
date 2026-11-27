@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { LoaderCircle, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -134,10 +135,10 @@ export function QuotasPage() {
         <CardContent>
           {loading ? <div className="flex items-center gap-2 py-6 text-sm text-muted-foreground"><LoaderCircle className="size-4 animate-spin" />正在读取额度…</div> : items.length === 0 ? <p className="py-6 text-sm text-muted-foreground">暂无额度记录。</p> : (
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] text-sm">
-                <thead><tr className="border-b text-left text-muted-foreground"><th className="p-3">代理</th><th className="p-3">软件 / 套餐</th><th className="p-3">可用</th><th className="p-3">累计分配</th><th className="p-3">已消耗</th><th className="p-3">状态</th></tr></thead>
-                <tbody>{items.map((item) => <tr key={item.id} className="border-b last:border-0"><td className="p-3"><span className="font-medium">{item.username}</span><p className="text-xs text-muted-foreground">{item.role}</p></td><td className="p-3">{item.software_name}<p className="text-xs text-muted-foreground">{item.plan_name}</p></td><td className="p-3 font-semibold tabular-nums">{item.available_quantity}</td><td className="p-3 tabular-nums">{item.allocated_quantity}</td><td className="p-3 tabular-nums">{item.consumed_quantity}</td><td className="p-3"><Badge variant="secondary">正常</Badge></td></tr>)}</tbody>
-              </table>
+              <Table className="w-full min-w-[720px] text-sm">
+                <TableHeader><TableRow className="border-b text-left text-muted-foreground"><TableHead className="p-3">代理</TableHead><TableHead className="p-3">软件 / 套餐</TableHead><TableHead className="p-3">可用</TableHead><TableHead className="p-3">累计分配</TableHead><TableHead className="p-3">已消耗</TableHead><TableHead className="p-3">状态</TableHead></TableRow></TableHeader>
+                <TableBody>{items.map((item) => <TableRow key={item.id} className="border-b last:border-0"><TableCell className="p-3"><span className="font-medium">{item.username}</span><p className="text-xs text-muted-foreground">{item.role}</p></TableCell><TableCell className="p-3">{item.software_name}<p className="text-xs text-muted-foreground">{item.plan_name}</p></TableCell><TableCell className="p-3 font-semibold tabular-nums">{item.available_quantity}</TableCell><TableCell className="p-3 tabular-nums">{item.allocated_quantity}</TableCell><TableCell className="p-3 tabular-nums">{item.consumed_quantity}</TableCell><TableCell className="p-3"><Badge variant="secondary">正常</Badge></TableCell></TableRow>)}</TableBody>
+              </Table>
             </div>
           )}
         </CardContent>
