@@ -146,7 +146,7 @@ final class AuthSessionService
             'id' => (int) $session['user_id'],
             'username' => (string) $session['username'],
             'role' => (string) $session['role'],
-            'must_change_password' => (bool) $session['must_change_password'],
+            'must_change_password' => (string) $session['role'] === 'ADMIN' && (bool) $session['must_change_password'],
             'session_id' => (int) $session['session_id'],
             'expires_at' => (string) $session['expires_at'],
         ];
@@ -231,7 +231,7 @@ final class AuthSessionService
             'id' => (int) $user['id'],
             'username' => (string) $user['username'],
             'role' => (string) $user['role'],
-            'must_change_password' => (bool) $user['must_change_password'],
+            'must_change_password' => (string) $user['role'] === 'ADMIN' && (bool) $user['must_change_password'],
         ];
     }
 
