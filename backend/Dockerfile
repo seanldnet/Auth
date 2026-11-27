@@ -13,7 +13,7 @@ RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoload
 COPY deploy/backend-entrypoint.sh /usr/local/bin/auth-entrypoint
 RUN chmod +x /usr/local/bin/auth-entrypoint \
     && printf '%s\n' '<Directory /var/www/html/public>' '    AllowOverride All' '    Require all granted' '    FallbackResource /index.php' '</Directory>' > /etc/apache2/conf-available/auth-public.conf \
-    && a2enconf auth-public \
+    && a2enconf auth-public \\\n    && sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf \\
     && mkdir -p runtime/cache runtime/log \
     && chown -R www-data:www-data runtime
 EXPOSE 80
