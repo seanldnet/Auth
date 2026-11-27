@@ -56,7 +56,7 @@ final class Auth
         setcookie('auth_session', '', [
             'expires' => time() - 3600,
             'path' => '/',
-            'secure' => $request->isSsl() || !(bool) config('app.app_debug', false),
+            'secure' => $request->isSsl() || strtolower((string) $request->header('x-forwarded-proto', '')) === 'https',
             'httponly' => true,
             'samesite' => 'Lax',
         ]);
