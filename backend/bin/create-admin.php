@@ -13,8 +13,8 @@ $app->initialize();
 $username = trim((string) getenv('AUTH_BOOTSTRAP_ADMIN_USERNAME'));
 $password = (string) getenv('AUTH_BOOTSTRAP_ADMIN_PASSWORD');
 
-if ($username === '' || $password === '' || strlen($password) < 16) {
-    fwrite(STDERR, "Set AUTH_BOOTSTRAP_ADMIN_USERNAME and AUTH_BOOTSTRAP_ADMIN_PASSWORD (16+ characters) in the process environment.\n");
+if ($username === '' || $password === '' || strlen($password) < 6) {
+    fwrite(STDERR, "Set AUTH_BOOTSTRAP_ADMIN_USERNAME and AUTH_BOOTSTRAP_ADMIN_PASSWORD (at least 6 characters) in the process environment.\n");
     exit(1);
 }
 
@@ -40,9 +40,9 @@ Db::transaction(static function () use ($username, $passwordHash): void {
         'password_updated_at' => gmdate('Y-m-d H:i:s'),
     ]);
 
-    Db::name('wallet_accounts')->insertAll([
-        ['user_id' => $userId, 'currency' => 'CNY', 'balance' => '0'],
-        ['user_id' => $userId, 'currency' => 'USDT', 'balance' => '0'],
+    Db::name('wallet_accounts')->insert([
+        'user_id' => $userId,
+        'balance' => '0',
     ]);
 });
 
