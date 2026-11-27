@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, KeyRound, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,19 @@ import { Input } from "@/components/ui/input";
 
 export function ChangePasswordPage() {
   const navigate = useNavigate();
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/auth/me", { credentials: "include", headers: { Accept: "application/json" }, signal: controller.signal })
+      .then(async response => {
+        const result = await response.json();
+        if (!response.ok || !result.success) { navigate("/login", { replace: true }); return; }
+        const user = result.data.user;
+        if (user.role !== "ADMIN" || !user.must_change_password) navigate("/dashboard", { replace: true });
+      })
+      .catch(() => { if (!controller.signal.aborted) navigate("/login", { replace: true }); });
+    return () => controller.abort();
+  }, [navigate]);
+
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -44,7 +57,7 @@ export function ChangePasswordPage() {
       if (!response.ok || !result.success) {
         throw new Error(result.message || "密码修改失败");
       }
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "密码修改请求失败");
     } finally {
