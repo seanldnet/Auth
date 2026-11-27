@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 namespace tests;
 
-use app\\security\\ApiKeyRequestSigner;
-use app\\security\\ApiKeySecretCipher;
-use PHPUnit\\Framework\\TestCase;
+use app\security\ApiKeyRequestSigner;
+use app\security\ApiKeySecretCipher;
+use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 final class ApiKeyRequestSigningTest extends TestCase
