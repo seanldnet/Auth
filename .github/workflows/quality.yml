@@ -284,7 +284,7 @@ jobs:
           done
           if [ "$ready" != "true" ]; then
             echo "Health endpoint response body:"
-            head -c 12000 /tmp/auth-health-response || true
+            tail -c 12000 /tmp/auth-health-response || true
             echo
             docker compose --env-file .env -f deploy/docker-compose.yml ps
             docker compose --env-file .env -f deploy/docker-compose.yml logs --tail=150 backend scheduler frontend db
