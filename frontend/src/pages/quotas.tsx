@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 type User = { id: number; username: string; role: string };
 type Software = { id: number; name: string; status: string };
@@ -103,22 +104,13 @@ export function QuotasPage() {
         <CardContent>
           <form onSubmit={allocate} className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <label className="flex flex-col gap-2 text-sm">代理 / 下级代理
-              <select className="h-10 rounded-md border bg-background px-3" value={userId} onChange={(e) => setUserId(e.target.value)}>
-                <option value="">请选择代理</option>
-                {users.map((user) => <option key={user.id} value={user.id}>{user.username}（{user.role === "AGENT" ? "代理" : "下级代理"}）</option>)}
-              </select>
+              <Select value={userId || "__none"} onValueChange={v=>setUserId(v==="__none"?"":v)}><SelectTrigger><SelectValue placeholder="请选择代理" /></SelectTrigger><SelectContent><SelectItem value="__none">请选择代理</SelectItem>{users.map(user=><SelectItem key={user.id} value={String(user.id)}>{user.username}（{user.role === "AGENT" ? "代理" : "下级代理"}）</SelectItem>)}</SelectContent></Select>
             </label>
             <label className="flex flex-col gap-2 text-sm">软件
-              <select className="h-10 rounded-md border bg-background px-3" value={softwareId} onChange={(e) => setSoftwareId(e.target.value)}>
-                <option value="">请选择软件</option>
-                {software.map((app) => <option key={app.id} value={app.id}>{app.name}</option>)}
-              </select>
+              <Select value={softwareId || "__none"} onValueChange={v=>setSoftwareId(v==="__none"?"":v)}><SelectTrigger><SelectValue placeholder="请选择软件" /></SelectTrigger><SelectContent><SelectItem value="__none">请选择软件</SelectItem>{software.map(app=><SelectItem key={app.id} value={String(app.id)}>{app.name}</SelectItem>)}</SelectContent></Select>
             </label>
             <label className="flex flex-col gap-2 text-sm">套餐
-              <select className="h-10 rounded-md border bg-background px-3" value={planId} onChange={(e) => setPlanId(e.target.value)} disabled={!plans.length}>
-                <option value="">请选择套餐</option>
-                {plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}（{plan.plan_code}）</option>)}
-              </select>
+              <Select value={planId || "__none"} onValueChange={v=>setPlanId(v==="__none"?"":v)} disabled={!plans.length}><SelectTrigger><SelectValue placeholder="请选择套餐" /></SelectTrigger><SelectContent><SelectItem value="__none">请选择套餐</SelectItem>{plans.map(plan=><SelectItem key={plan.id} value={String(plan.id)}>{plan.name}（{plan.plan_code}）</SelectItem>)}</SelectContent></Select>
             </label>
             <label className="flex flex-col gap-2 text-sm">分配数量
               <Input type="number" min="1" max="1000000" step="1" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
