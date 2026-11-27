@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type User = { id: number; username: string; role: "ADMIN"|"AGENT"|"SUB_AGENT"|"USER"; parent_id: number|null; parent_username?: string|null; invite_code?: string|null; status: "ACTIVE"|"DISABLED"|"LOCKED"; must_change_password?: boolean; last_login_at?: string|null; created_at?: string; assigned_at?: string|null };
 type PageData = { items: User[]; total: number; page: number; page_size: number };
@@ -39,6 +41,8 @@ export function UsersPage() {
   const [created, setCreated] = useState<User & {initial_password?:string}|null>(null);
   const [assignTarget, setAssignTarget] = useState<Record<number,string>>({});
   const [transferTarget, setTransferTarget] = useState<Record<number,string>>({});
+  const [transferDialogUserId, setTransferDialogUserId] = useState<number|null>(null);
+  const [transferReason, setTransferReason] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true); setError("");
@@ -91,16 +95,24 @@ export function UsersPage() {
     } catch (cause) { setError(cause instanceof Error ? cause.message : "审批失败"); }
   }
 
-  async function requestTransfer(userId:number) {
+  function requestTransfer(userId:number) {
     const target = transferTarget[userId];
     if (target === undefined || target === "") { setError("请选择新的归属代理或公共用户池。"); return; }
-    const reason = window.prompt("请输入归属变更原因（可留空）：") || "";
+    setTransferReason("");
+    setTransferDialogUserId(userId);
+  }
+
+  async function submitTransferRequest() {
+    if (transferDialogUserId === null) return;
+    const userId = transferDialogUserId;
+    const target = transferTarget[userId];
     try {
       await api<User>(`/api/admin/users/${userId}/transfer-requests`, {
         method:"POST",
-        body:JSON.stringify({target_parent_id:target === "POOL" ? null : Number(target), reason}),
+        body:JSON.stringify({target_parent_id:target === "POOL" ? null : Number(target), reason:transferReason}),
       });
       setNotice("归属变更申请已创建，请在待审批列表中完成审批。");
+      setTransferDialogUserId(null);
       await load();
     } catch (cause) { setError(cause instanceof Error ? cause.message : "创建归属变更申请失败"); }
   }
@@ -113,7 +125,7 @@ export function UsersPage() {
   }
 
   const pages = Math.max(1,Math.ceil(total/20));
-  return <section className="flex flex-col gap-6">
+  return <><Dialog open={transferDialogUserId!==null} onOpenChange={open=>{if(!open)setTransferDialogUserId(null);}}><DialogContent><DialogHeader><DialogTitle>提交归属变更申请</DialogTitle><DialogDescription>请填写变更原因（可留空）。申请提交后需要管理员审批。</DialogDescription></DialogHeader><Textarea value={transferReason} onChange={e=>setTransferReason(e.target.value)} placeholder="归属变更原因（选填）" rows={4}/><DialogFooter><Button type="button" variant="outline" onClick={()=>setTransferDialogUserId(null)}>取消</Button><Button type="button" onClick={()=>void submitTransferRequest()}>提交申请</Button></DialogFooter></DialogContent></Dialog><section className="flex flex-col gap-6">
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="flex flex-col gap-2"><p className="text-sm font-medium text-primary">组织与账号</p><h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">用户与代理</h1><p className="max-w-3xl text-sm leading-6 text-muted-foreground">按管理员、代理、下级代理和用户的层级管理账号。代理只能管理自己的下级范围，公共用户由管理员统一分配。</p></div>
       <Button variant="outline" onClick={()=>void load()} disabled={loading}><RefreshCw className="size-4"/>刷新</Button>
@@ -134,5 +146,5 @@ export function UsersPage() {
       </div>)}</div>}
       <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm text-muted-foreground"><span>第 {page} / {pages} 页</span><div className="flex gap-2"><Button size="sm" variant="outline" disabled={page<=1||loading} onClick={()=>setPage(p=>p-1)}>上一页</Button><Button size="sm" variant="outline" disabled={page>=pages||loading} onClick={()=>setPage(p=>p+1)}>下一页</Button></div></div>
     </CardContent></Card>
-  </section>;
+  </section></>;
 }
