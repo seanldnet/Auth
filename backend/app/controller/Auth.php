@@ -71,6 +71,10 @@ final class Auth
             return json(['success' => false, 'message' => '请先登录'], 401);
         }
 
+        if ((string) ($user['role'] ?? '') !== 'ADMIN' || empty($user['must_change_password'])) {
+            return json(['success' => false, 'message' => '当前账号无需执行首次管理员密码初始化'], 403);
+        }
+
         $payload = RequestPayload::all($request);
         try {
             (new AuthSessionService())->changePassword(
