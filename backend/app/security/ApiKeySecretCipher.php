@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace app\\security;
+namespace app\security;
 
 use RuntimeException;
 
