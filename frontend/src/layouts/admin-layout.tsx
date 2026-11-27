@@ -85,27 +85,27 @@ export function AdminLayout() {
   if (loading || !user) return <main className="flex min-h-screen items-center justify-center bg-muted/40"><div className="flex items-center gap-3 text-sm text-muted-foreground"><LoaderCircle className="size-5 animate-spin"/>正在验证登录状态…</div></main>;
 
   const sidebar = (mobile = false) => (
-    <div className="flex h-full flex-col bg-card">
-      <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b px-5">
-        <div className="flex items-center gap-3"><div className="flex size-9 items-center justify-center rounded-lg bg-primary font-bold text-primary-foreground">A</div><div><p className="font-semibold tracking-tight">Auth Console</p><p className="text-xs text-muted-foreground">授权管理平台</p></div></div>
+    <div className="flex h-full flex-col bg-slate-950 text-white">
+      <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-white/10 px-5">
+        <div className="flex items-center gap-3"><div className="flex size-9 items-center justify-center rounded-lg bg-indigo-500 font-bold text-white">A</div><div><p className="font-semibold tracking-tight text-white">Auth Console</p><p className="text-xs text-slate-400">授权管理平台</p></div></div>
         {mobile ? <Button variant="ghost" size="icon" aria-label="关闭菜单" onClick={() => setMobileOpen(false)}><X className="size-5"/></Button> : null}
       </div>
       <nav className="flex-1 space-y-5 overflow-y-auto p-4">
-        {visibleGroups.map(group => <section key={group.title} className="space-y-1"><p className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-muted-foreground">{group.title}</p>{group.items.map(({ label, to, icon: Icon }) => <NavLink key={to} to={to} onClick={() => setMobileOpen(false)} className={({ isActive }) => cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors", isActive ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground")}><Icon className="size-4 shrink-0"/>{label}</NavLink>)}</section>)}
+        {visibleGroups.map(group => <section key={group.title} className="space-y-1"><p className="px-3 pb-1 text-[11px] font-semibold tracking-[.16em] text-slate-500">{group.title}</p>{group.items.map(({ label, to, icon: Icon }) => <NavLink key={to} to={to} onClick={() => setMobileOpen(false)} className={({ isActive }) => cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors", isActive ? "bg-indigo-500/15 text-indigo-200 ring-1 ring-inset ring-indigo-400/20" : "text-slate-400 hover:bg-white/5 hover:text-white")}><Icon className="size-4 shrink-0"/>{label}</NavLink>)}</section>)}
       </nav>
-      <div className="border-t p-4"><p className="text-xs text-muted-foreground">V1.3 · {user.role} · 管理控制台</p></div>
+      <div className="border-t border-white/10 p-4"><p className="text-xs text-slate-500">V1.3 · {user.role} · 管理控制台</p></div>
     </div>
   );
 
-  return <div className="min-h-screen bg-muted/40 text-foreground">
+  return <div className="min-h-screen bg-slate-50 text-slate-950">
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 border-r lg:block">{sidebar()}</aside>
     {mobileOpen ? <div className="fixed inset-0 z-40 lg:hidden"><button aria-label="关闭菜单遮罩" className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)}/><aside className="absolute inset-y-0 left-0 w-[min(84vw,320px)] shadow-xl">{sidebar(true)}</aside></div> : null}
     <div className="lg:pl-64">
-      <header className="sticky top-0 z-10 flex min-h-16 items-center justify-between gap-3 border-b bg-background/90 px-4 py-3 backdrop-blur sm:px-6">
-        <div className="flex items-center gap-3"><Button className="lg:hidden" variant="ghost" size="icon" aria-label="打开菜单" onClick={() => setMobileOpen(true)}><Menu className="size-5"/></Button><div><p className="text-sm font-semibold">多软件授权管理平台</p><p className="text-xs text-muted-foreground">统一管理 · 多角色权限隔离</p></div></div>
+      <header className="sticky top-0 z-10 flex min-h-16 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-4 py-3 backdrop-blur sm:px-6">
+        <div className="flex items-center gap-3"><Button className="lg:hidden" variant="ghost" size="icon" aria-label="打开菜单" onClick={() => setMobileOpen(true)}><Menu className="size-5"/></Button><div><p className="text-sm font-semibold tracking-tight">Auth 管理控制台</p><p className="text-xs text-slate-500">多软件授权 · 统一运营中心</p></div></div>
         <div className="flex items-center gap-2 sm:gap-3"><div className="hidden text-right sm:block"><p className="text-sm font-medium">{user.username}</p><p className="text-xs text-muted-foreground">{user.role}</p></div><Button variant="ghost" size="sm" onClick={logout}><LogOut className="size-4"/>退出登录</Button></div>
       </header>
-      <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-6 p-4 sm:gap-8 sm:p-6 lg:p-8"><Outlet/></main>
+      <main className="mx-auto flex w-full max-w-[1600px] flex-col gap-7 p-4 sm:p-6 lg:p-8"><Outlet/></main>
     </div>
   </div>;
 }
