@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Activity, AppWindow, Bell, BookOpen, CreditCard, FileClock, Globe2, KeyRound, LayoutDashboard, Layers, LogOut, Settings, ShieldCheck, Users, LoaderCircle, Wallet, ReceiptText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -20,7 +20,7 @@ const groups: { title: string; items: NavItem[] }[] = [
  {title:"系统管理",items:[{label:"区域节点",to:"/regions",icon:Globe2,roles:adminRoles},{label:"系统监控",to:"/monitoring",icon:Activity,roles:adminRoles},{label:"系统设置",to:"/settings",icon:Settings,roles:adminRoles}]},
 ];
 export function AdminLayout(){
- const navigate=useNavigate();const [user,setUser]=useState<SessionUser|null>(null);const [loading,setLoading]=useState(true);
+ const navigate=useNavigate();const location=useLocation();const [user,setUser]=useState<SessionUser|null>(null);const [loading,setLoading]=useState(true);
  const visibleGroups=useMemo(()=>groups.map(group=>({...group,items:group.items.filter(item=>user&&item.roles.includes(user.role))})).filter(group=>group.items.length>0),[user]);
  useEffect(()=>{const controller=new AbortController();fetch("/api/auth/me",{credentials:"include",headers:{Accept:"application/json"},signal:controller.signal}).then(async response=>{const result=await response.json();if(!response.ok||!result.success){navigate("/login",{replace:true});return;}const sessionUser=result.data.user as SessionUser;if(sessionUser.must_change_password){navigate("/change-password",{replace:true});return;}setUser(sessionUser);}).catch(()=>{if(!controller.signal.aborted)navigate("/login",{replace:true});}).finally(()=>{if(!controller.signal.aborted)setLoading(false);});return()=>controller.abort();},[navigate]);
  async function logout(){try{await fetch("/api/auth/logout",{method:"POST",credentials:"include",headers:{Accept:"application/json"}});}finally{navigate("/login",{replace:true});}}
@@ -28,7 +28,7 @@ export function AdminLayout(){
  return <SidebarProvider className="bg-background text-foreground">
   <Sidebar>
    <SidebarHeader><div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">A</div><div className="min-w-0"><p className="truncate text-sm font-semibold">Auth Console</p><p className="truncate text-xs text-muted-foreground">授权管理平台</p></div></SidebarHeader>
-   <SidebarContent>{visibleGroups.map(group=><SidebarGroup key={group.title}><SidebarGroupLabel>{group.title}</SidebarGroupLabel><SidebarMenu>{group.items.map(({label,to,icon:Icon})=><SidebarMenuItem key={to}><NavLink to={to} end onClick={()=>undefined} className="block"><SidebarMenuButton asChild><span><Icon className="size-4 shrink-0"/><span>{label}</span></span></SidebarMenuButton></NavLink></SidebarMenuItem>)}</SidebarMenu></SidebarGroup>)}</SidebarContent>
+   <SidebarContent>{visibleGroups.map(group=><SidebarGroup key={group.title}><SidebarGroupLabel>{group.title}</SidebarGroupLabel><SidebarMenu>{group.items.map(({label,to,icon:Icon})=><SidebarMenuItem key={to}><SidebarMenuButton asChild isActive={location.pathname===to}><NavLink to={to}><Icon className="size-4 shrink-0"/><span>{label}</span></NavLink></SidebarMenuButton></SidebarMenuItem>)}</SidebarMenu></SidebarGroup>)}</SidebarContent>
    <SidebarFooter>V1.3 · {user.role} · 管理控制台</SidebarFooter>
   </Sidebar>
   <SidebarInset>
