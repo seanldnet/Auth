@@ -276,8 +276,9 @@ jobs:
             docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.ci.yml logs --tail=150 backend db
             exit 1
           fi
-          response=$(curl -fsS -H 'Content-Type: application/json' -d '{"username":"admin","password":"123456"}' http://127.0.0.1:18080/api/auth/login)
-          echo "$response" | jq .
+          response=$(curl -sS -H 'Content-Type: application/json' -d '{"username":"admin","password":"123456"}' http://127.0.0.1:18080/api/auth/login || true)
+          echo "$response" | head -c 8000
+          echo
           echo "$response" | jq -e '.success == true and .data.user.role == "ADMIN"'
       - name: Stop Docker smoke stack
         if: always()
