@@ -286,24 +286,30 @@ jobs:
             docker compose --env-file .env -f deploy/docker-compose.yml logs --tail=150 backend scheduler frontend db
             exit 1
           fi
+          echo "Checking frontend"
           curl --max-time 15 -fsS http://127.0.0.1/ | grep -qi '<div id="root">'
-          login=$(curl -fsS -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{"username":"admin","password":"123456"}' -c /tmp/auth-cookies.txt http://127.0.0.1/api/auth/login)
+          echo "Checking default administrator login"
+          login=$(curl --max-time 15 -fsS -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{"username":"admin","password":"123456"}' -c /tmp/auth-cookies.txt http://127.0.0.1/api/auth/login)
           echo "$login" | grep -q '"success":true'
           echo "$login" | grep -q '"must_change_password":true'
           test -s /tmp/auth-cookies.txt
-          me=$(curl -fsS -b /tmp/auth-cookies.txt http://127.0.0.1/api/auth/me)
+          echo "Checking authenticated session"
+          me=$(curl --max-time 15 -fsS -b /tmp/auth-cookies.txt http://127.0.0.1/api/auth/me)
           echo "$me" | grep -q '"must_change_password":true'
-          changed=$(curl -fsS -X POST -H 'Content-Type: application/json' -b /tmp/auth-cookies.txt -d '{"current_password":"123456","new_password":"Docker-Smoke-Test-2026!"}' http://127.0.0.1/api/auth/change-password)
+          echo "Checking forced password change"
+          changed=$(curl --max-time 15 -fsS -X POST -H 'Content-Type: application/json' -b /tmp/auth-cookies.txt -d '{"current_password":"123456","new_password":"Docker-Smoke-Test-2026!"}' http://127.0.0.1/api/auth/change-password)
           echo "$changed" | grep -q '"success":true'
-          relogin=$(curl -fsS -H 'Content-Type: application/json' -d '{"username":"admin","password":"Docker-Smoke-Test-2026!"}' http://127.0.0.1/api/auth/login)
+          echo "Checking login with changed password"
+          relogin=$(curl --max-time 15 -fsS -H 'Content-Type: application/json' -d '{"username":"admin","password":"Docker-Smoke-Test-2026!"}' http://127.0.0.1/api/auth/login)
           echo "$relogin" | grep -q '"success":true'
           echo "$relogin" | grep -q '"must_change_password":false'
           set -a
           . ./.env
           set +a
-          migrations=$(docker compose --env-file .env -f deploy/docker-compose.yml exec -T db mysql -uauth -p"$AUTH_DB_PASSWORD" auth -Nse "SELECT COUNT(*) FROM auth_schema_migrations")
+          echo "Checking migration and wallet database state"
+          migrations=$(timeout 20s docker compose --env-file .env -f deploy/docker-compose.yml exec -T db mysql -uauth -p"$AUTH_DB_PASSWORD" auth -Nse "SELECT COUNT(*) FROM auth_schema_migrations")
           test "$migrations" = "15"
-          wallets=$(docker compose --env-file .env -f deploy/docker-compose.yml exec -T db mysql -uauth -p"$AUTH_DB_PASSWORD" auth -Nse "SELECT COUNT(*) FROM auth_wallet_accounts")
+          wallets=$(timeout 20s docker compose --env-file .env -f deploy/docker-compose.yml exec -T db mysql -uauth -p"$AUTH_DB_PASSWORD" auth -Nse "SELECT COUNT(*) FROM auth_wallet_accounts")
           test "$wallets" = "1"
       - name: Show Docker logs on smoke-test failure
         if: failure()
