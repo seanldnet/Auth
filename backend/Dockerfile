@@ -1,16 +1,15 @@
 FROM php:8.2-apache-bookworm
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends default-mysql-client unzip git \
-    && docker-php-ext-install pdo_mysql \
+    && apt-get install -y --no-install-recommends default-mysql-client unzip git libcurl4-openssl-dev libonig-dev \
+    && docker-php-ext-install curl mbstring pdo_mysql \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && a2enmod rewrite headers \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /var/www/html
-COPY backend/composer.json ./composer.json
-RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 COPY backend/ ./
+RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 COPY deploy/backend-entrypoint.sh /usr/local/bin/auth-entrypoint
 RUN chmod +x /usr/local/bin/auth-entrypoint \
     && printf '%s\n' '<Directory /var/www/html/public>' '    AllowOverride All' '    Require all granted' '    FallbackResource /index.php' '</Directory>' > /etc/apache2/conf-available/auth-public.conf \
