@@ -278,12 +278,17 @@ jobs:
         run: |
           ready=false
           for attempt in $(seq 1 30); do
-            if curl --max-time 3 -fsS http://127.0.0.1/api/health >/dev/null 2>&1; then ready=true; break; fi
+            status=$(curl --max-time 3 -sS -o /tmp/auth-health-response -w '%{http_code}' http://127.0.0.1/api/health || true)
+            if [ "$status" = "200" ]; then ready=true; break; fi
             sleep 3
           done
           if [ "$ready" != "true" ]; then
+            echo "Health endpoint response body:"
+            head -c 12000 /tmp/auth-health-response || true
+            echo
             docker compose --env-file .env -f deploy/docker-compose.yml ps
             docker compose --env-file .env -f deploy/docker-compose.yml logs --tail=150 backend scheduler frontend db
+            docker compose --env-file .env -f deploy/docker-compose.yml exec -T backend sh -c 'find runtime/log -type f -exec sh -c "echo === \\$1; tail -n 100 \\$1" _ {} \\;' || true
             exit 1
           fi
           echo "Checking frontend"
