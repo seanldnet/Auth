@@ -61,7 +61,7 @@ services:
   scheduler:
     image: ghcr.io/seanldnet/auth-backend:latest
     restart: unless-stopped
-    command: ["/bin/sh", "-c", "until php think auth:cleanup-api-key-nonces; do sleep 10; done; while true; do php think auth:cleanup-api-key-nonces || true; if [ \"$$(date +%M)\" = \"00\" ]; then php think auth:notify-expiring-licenses || true; fi; sleep 60; done"]
+    entrypoint: ["scheduler-entrypoint"]
     environment:
       APP_KEY: ${APP_KEY}
       APP_DEBUG: "false"
@@ -72,8 +72,6 @@ services:
       DB_PORT: "3306"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
-      AUTH_BOOTSTRAP_ADMIN_USERNAME: admin
-      AUTH_BOOTSTRAP_ADMIN_PASSWORD: ${AUTH_BOOTSTRAP_ADMIN_PASSWORD}
     depends_on:
       - backend
     networks: [auth-internal]
