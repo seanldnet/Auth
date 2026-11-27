@@ -11,7 +11,8 @@ WORKDIR /var/www/html
 COPY backend/ ./
 RUN composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 COPY deploy/backend-entrypoint.sh /usr/local/bin/auth-entrypoint
-RUN chmod +x /usr/local/bin/auth-entrypoint \
+COPY deploy/scheduler-entrypoint.sh /usr/local/bin/scheduler-entrypoint
+RUN chmod +x /usr/local/bin/auth-entrypoint /usr/local/bin/scheduler-entrypoint \
     && printf '%s\n' '<Directory /var/www/html/public>' '    AllowOverride All' '    Require all granted' '    FallbackResource /index.php' '</Directory>' > /etc/apache2/conf-available/auth-public.conf \
     && a2enconf auth-public \
     && sed -ri 's!/var/www/html!/var/www/html/public!g' /etc/apache2/sites-available/000-default.conf \
