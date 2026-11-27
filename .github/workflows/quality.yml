@@ -230,3 +230,56 @@ jobs:
       - name: Run Kotlin SDK tests
         run: /tmp/gradle-8.12/bin/gradle --no-daemon test
         working-directory: sdk/kotlin
+
+  docker-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: ghcr.io/seanldnet/auth-backend:ci
+          load: true
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: ghcr.io/seanldnet/auth-frontend:ci
+          load: true
+
+      - name: Start full Docker stack and initialize MySQL
+        run: |
+          mkdir -p /tmp/auth-docker-smoke
+          cat > .env <<EOF
+          APP_KEY=$(openssl rand -hex 32)
+          DATABASE_PASSWORD=$(openssl rand -hex 24)
+          MYSQL_ROOT_PASSWORD=$(openssl rand -hex 24)
+          REDIS_PASSWORD=$(openssl rand -hex 24)
+          AUTH_HTTP_PORT=18080
+          EOF
+          docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.ci.yml up -d
+      - name: Wait for API and verify default administrator login
+        run: |
+          ready=0
+          for i in $(seq 1 120); do
+            if curl -fsS http://127.0.0.1:18080/api/health >/dev/null 2>&1; then ready=1; break; fi
+            sleep 2
+          done
+          if [ "$ready" -ne 1 ]; then
+            docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.ci.yml ps
+            docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.ci.yml logs --tail=150 backend db
+            exit 1
+          fi
+          response=$(curl -sS -H 'Content-Type: application/json' -d '{"username":"admin","password":"123456"}' http://127.0.0.1:18080/api/auth/login || true)
+          echo "$response" | head -c 8000
+          echo
+          echo "$response" | jq -e '.success == true and .data.user.role == "ADMIN"'
+      - name: Stop Docker smoke stack
+        if: always()
+        run: docker compose --env-file .env -f deploy/docker-compose.yml -f deploy/docker-compose.ci.yml down -v

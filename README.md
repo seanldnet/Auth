@@ -56,3 +56,13 @@
 6. 支付渠道币种仅作为订单/渠道快照；钱包始终是单账户、单余额，显示单位全局统一且仅改变展示。
 7. 支付渠道使用独立适配器；真实商户联调完成前不得标记为生产已接通。
 8. 所有前端页面遵循既定 UI 组件、统一留白、间距和响应式规范。
+
+## Docker 一键部署（测试版）
+
+Docker 部署脚本和预构建镜像流水线已进入开发，部署说明见 [deploy/README.md](deploy/README.md)。合并到 main 并等待 GHCR 镜像构建/公开发布成功后，Ubuntu/Debian 服务器可执行：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/seanldnet/Auth/main/deploy/install.sh | bash
+```
+
+首次管理员账号为 `admin`，密码为 `123456`，首次登录强制修改密码。部署脚本会自动生成 APP_KEY、MySQL 和 Redis 密码；支付渠道、邮件和 Telegram 等外部服务仍需后续配置。请以 Docker 镜像发布流水线成功且 GHCR 镜像可匿名拉取为可部署标准，不要在此之前执行安装命令。

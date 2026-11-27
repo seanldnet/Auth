@@ -10,17 +10,17 @@ require dirname(__DIR__) . '/vendor/autoload.php';
 $app = new App();
 $app->initialize();
 
-$username = trim((string) getenv('AUTH_BOOTSTRAP_ADMIN_USERNAME'));
-$password = (string) getenv('AUTH_BOOTSTRAP_ADMIN_PASSWORD');
+$username = trim((string)(getenv('AUTH_BOOTSTRAP_ADMIN_USERNAME') ?: 'admin'));
+$password = (string)(getenv('AUTH_BOOTSTRAP_ADMIN_PASSWORD') ?: '123456');
 
-if ($username === '' || $password === '' || strlen($password) < 16) {
-    fwrite(STDERR, "Set AUTH_BOOTSTRAP_ADMIN_USERNAME and AUTH_BOOTSTRAP_ADMIN_PASSWORD (16+ characters) in the process environment.\n");
+if ($username === '' || $password === '') {
+    fwrite(STDERR, "Bootstrap administrator credentials must not be empty.\n");
     exit(1);
 }
 
 if (Db::name('users')->count() > 0) {
-    fwrite(STDERR, "Bootstrap refused: auth_users is not empty. Use the existing administrator account.\n");
-    exit(1);
+    fwrite(STDOUT, "Administrator bootstrap skipped: users already exist.\n");
+    exit(0);
 }
 
 $algorithm = in_array('argon2id', password_algos(), true) ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT;
@@ -40,10 +40,11 @@ Db::transaction(static function () use ($username, $passwordHash): void {
         'password_updated_at' => gmdate('Y-m-d H:i:s'),
     ]);
 
-    Db::name('wallet_accounts')->insertAll([
-        ['user_id' => $userId, 'currency' => 'CNY', 'balance' => '0'],
-        ['user_id' => $userId, 'currency' => 'USDT', 'balance' => '0'],
+    // The platform has one wallet account and one numeric balance per user.
+    Db::name('wallet_accounts')->insert([
+        'user_id' => $userId,
+        'balance' => '0',
     ]);
 });
 
-fwrite(STDOUT, "Bootstrap administrator created. Sign in and change the password before configuring the platform.\n");
+fwrite(STDOUT, "Bootstrap administrator created. Username: {$username}. Change the default password after first login.\n");
