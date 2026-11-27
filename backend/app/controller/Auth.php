@@ -26,7 +26,7 @@ final class Auth
             setcookie('auth_session', $result['token'], [
                 'expires' => time() + AuthSessionService::SESSION_TTL_SECONDS,
                 'path' => '/',
-                'secure' => $request->isSsl() || !(bool) config('app.app_debug', false),
+                'secure' => $this->secureCookie($request),
                 'httponly' => true,
                 'samesite' => 'Lax',
             ]);
@@ -98,4 +98,16 @@ final class Auth
         unset($user['session_id']);
         return json(['success' => true, 'data' => ['user' => $user]]);
     }
+    private function secureCookie(Request $request): bool
+    {
+        $configured = getenv('AUTH_COOKIE_SECURE');
+        if ($request->isSsl()) {
+            return true;
+        }
+        if ($configured !== false) {
+            return filter_var($configured, FILTER_VALIDATE_BOOLEAN);
+        }
+        return !(bool) config('app.app_debug', false);
+    }
+
 }
