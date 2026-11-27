@@ -239,7 +239,12 @@ jobs:
         run: bash -n deploy/install.sh && sh -n deploy/backend-entrypoint.sh
       - name: Validate Docker Compose configuration
         run: |
-          printf 'APP_KEY=01234567890123456789012345678901\\nAUTH_DB_PASSWORD=01234567890123456789012345678901\\nMYSQL_ROOT_PASSWORD=01234567890123456789012345678901\\nAUTH_BOOTSTRAP_ADMIN_PASSWORD=123456\\n' > .env
+          cat > .env <<'EOF'
+          APP_KEY=01234567890123456789012345678901
+          AUTH_DB_PASSWORD=01234567890123456789012345678901
+          MYSQL_ROOT_PASSWORD=01234567890123456789012345678901
+          AUTH_BOOTSTRAP_ADMIN_PASSWORD=123456
+          EOF
           docker compose --env-file .env -f deploy/docker-compose.yml config -q
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
