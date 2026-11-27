@@ -15,7 +15,7 @@ const adminRoles: Role[] = ["ADMIN"];
 const agentRoles: Role[] = ["AGENT", "SUB_AGENT"];
 const groups: { title: string; items: NavItem[] }[] = [
   { title: "工作台", items: [
-    { label: "总览", to: "/", icon: LayoutDashboard, roles: allRoles },
+    { label: "总览", to: "/dashboard", icon: LayoutDashboard, roles: allRoles },
     { label: "通知中心", to: "/notifications", icon: Bell, roles: allRoles },
   ]},
   { title: "授权业务", items: [
