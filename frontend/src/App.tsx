@@ -36,7 +36,7 @@ export default function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/change-password" element={<ChangePasswordPage />} />
       <Route element={<AdminLayout />}>
-        <Route path="/" element={<DashboardPage />} />
+        <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/apps" element={<SoftwarePage />} />
         <Route path="/licenses" element={<LicensesPage />} />
         <Route path="/agent/licenses" element={<AgentLicensesPage />} />
