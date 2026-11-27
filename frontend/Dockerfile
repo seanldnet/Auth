@@ -1,4 +1,5 @@
 FROM node:22-alpine AS build
+LABEL org.opencontainers.image.source=https://github.com/seanldnet/Auth
 WORKDIR /app
 COPY frontend/package*.json ./
 RUN npm install --no-audit --no-fund
