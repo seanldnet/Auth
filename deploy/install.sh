@@ -41,9 +41,14 @@ fi
 echo "[3/5] 正在下载 Docker Compose 部署文件..."
 curl -fsSL "$REPO/deploy/docker-compose.yml" -o docker-compose.yml
 chmod 600 docker-compose.yml
-if ss -ltn 2>/dev/null | grep -qE 'LISTEN[[:space:]]+[^[:space:]]*:80[[:space:]]'; then
-  echo "错误：服务器 80 端口已被占用，请先释放 80 端口。"
-  exit 1
+if ! docker compose ps --services --filter status=running 2>/dev/null | grep -qx frontend; then
+  if ss -ltn 2>/dev/null | grep -qE 'LISTEN[[:space:]]+[^[:space:]]*:80[[:space:]]'; then
+    echo "错误：服务器 80 端口已被占用，请先释放 80 端口。"
+    exit 1
+  fi
+fi
+if command -v ufw >/dev/null 2>&1; then
+  ufw allow 80/tcp >/dev/null 2>&1 || true
 fi
 echo "[4/5] 正在拉取预构建镜像（服务器不会编译源码）..."
 docker compose pull
