@@ -104,7 +104,7 @@ export function HomePage() {
         <section id="workflow" className="border-y bg-muted/30">
           <div className="mx-auto grid max-w-7xl gap-10 px-4 py-16 sm:px-6 md:grid-cols-2 md:items-center lg:px-8 lg:py-20">
             <div><p className="text-sm font-medium text-muted-foreground">HOW IT WORKS</p><h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">从接入到运营，流程清晰可控</h2><p className="mt-5 leading-7 text-muted-foreground">平台将软件、套餐、授权、用户、代理和支付数据关联起来，让每一步操作都有记录、有权限边界、可追踪。</p><Button asChild className="mt-7"><Link to="/developer-center">查看开发者文档 <ArrowUpRight /></Link></Button></div>
-            <div className="space-y-3">{workflow.map((step, index) => <Card key={step.number}><CardContent className="flex items-start gap-4 p-4"><span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-semibold tabular-nums">{step.number}</span><div><h3 className="font-medium">{step.title}</h3><p className="mt-1 text-sm text-muted-foreground">{step.description}</p></div></CardContent></Card>)}</div>
+            <div className="space-y-3">{workflow.map(step => <Card key={step.number}><CardContent className="flex items-start gap-4 p-4"><span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-semibold tabular-nums">{step.number}</span><div><h3 className="font-medium">{step.title}</h3><p className="mt-1 text-sm text-muted-foreground">{step.description}</p></div></CardContent></Card>)}</div>
           </div>
         </section>
 
