@@ -60,14 +60,7 @@ services:
   scheduler:
     image: ghcr.io/seanldnet/auth-backend:latest
     restart: unless-stopped
-    command:
-      - |
-        until php think auth:cleanup-api-key-nonces; do sleep 10; done
-        while true; do
-          php think auth:cleanup-api-key-nonces || true
-          if [ "$$(date +%M)" = "00" ]; then php think auth:notify-expiring-licenses || true; fi
-          sleep 60
-        done
+    command: ["/bin/sh", "-c", "until php think auth:cleanup-api-key-nonces; do sleep 10; done; while true; do php think auth:cleanup-api-key-nonces || true; if [ \"$$(date +%M)\" = \"00\" ]; then php think auth:notify-expiring-licenses || true; fi; sleep 60; done"]
     environment:
       APP_KEY: ${APP_KEY}
       APP_DEBUG: "false"
