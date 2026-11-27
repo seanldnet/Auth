@@ -73,7 +73,11 @@ export function UsersPage() {
     try {
       const result = await api<User & {initial_password?:string}>("/api/users", { method:"POST", body:JSON.stringify({username,role:newRole,password}) });
       setCreated(result); setNotice("账号创建成功。若系统生成了初始密码，请立即复制保存。");
-      setUsername(""); setPassword(""); setPage(1); await load();
+      setUsername(""); setPassword("");
+      // If already on page 1, changing page does not trigger the list effect.
+      // Otherwise let the effect reload page 1 after the state update to avoid
+      // issuing a stale request with the previous page number.
+      if (page === 1) await load(); else setPage(1);
     } catch (cause) { setError(cause instanceof Error ? cause.message : "创建账号失败"); }
     finally { setSaving(false); }
   }
