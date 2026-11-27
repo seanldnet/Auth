@@ -19,7 +19,7 @@ if ($username === '' || $password === '' || strlen($password) < 6) {
 }
 
 if (Db::name('users')->count() > 0) {
-    fwrite(STDOUT, "Existing users detected; bootstrap administrator creation skipped.\\n");
+    fwrite(STDOUT, "Existing users detected; bootstrap administrator creation skipped.\n");
     exit(0);
 }
 
