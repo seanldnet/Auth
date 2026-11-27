@@ -32,29 +32,39 @@ SELECT = 0
 EOF
 chmod 640 .env
 chown www-data:www-data .env
-mysql_args="--protocol=tcp -h$DB_HOST -P$DB_PORT -u$DB_USER"
-until mysql $mysql_args -p"$DB_PASSWORD" "$DB_NAME" -e "SELECT 1" >/dev/null 2>&1; do
+mysql_client() {
+    MYSQL_PWD="$DB_PASSWORD" mysql --protocol=tcp --connect-timeout=5 \
+        --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USER" "$DB_NAME" "$@"
+}
+
+until mysql_client -e "SELECT 1" >/dev/null 2>&1; do
     echo "Waiting for MySQL..."
     sleep 3
 done
-mysql $mysql_args -p"$DB_PASSWORD" "$DB_NAME" <<'SQL'
+echo "MySQL connection confirmed."
+
+mysql_client <<'SQL'
 CREATE TABLE IF NOT EXISTS auth_schema_migrations (
     version VARCHAR(190) NOT NULL PRIMARY KEY,
     applied_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 SQL
+
 for migration in /var/www/html/database/schema/*.sql; do
     [ -f "$migration" ] || continue
     version=$(basename "$migration")
-    applied=$(mysql $mysql_args -p"$DB_PASSWORD" "$DB_NAME" -Nse "SELECT COUNT(*) FROM auth_schema_migrations WHERE version='$version'")
+    applied=$(mysql_client -Nse "SELECT COUNT(*) FROM auth_schema_migrations WHERE version='$version'")
     if [ "$applied" = "1" ]; then
         echo "Migration already applied: $version"
         continue
     fi
     echo "Applying database migration: $version"
-    mysql $mysql_args -p"$DB_PASSWORD" "$DB_NAME" < "$migration"
-    mysql $mysql_args -p"$DB_PASSWORD" "$DB_NAME" -e "INSERT INTO auth_schema_migrations(version, applied_at) VALUES ('$version', UTC_TIMESTAMP())"
+    MYSQL_PWD="$DB_PASSWORD" timeout 120s mysql --protocol=tcp --connect-timeout=5 \
+        --host="$DB_HOST" --port="$DB_PORT" --user="$DB_USER" "$DB_NAME" < "$migration"
+    mysql_client -e "INSERT INTO auth_schema_migrations(version, applied_at) VALUES ('$version', UTC_TIMESTAMP())"
+    echo "Finished database migration: $version"
 done
+
 if [ -n "${AUTH_BOOTSTRAP_ADMIN_USERNAME:-}" ] && [ -n "${AUTH_BOOTSTRAP_ADMIN_PASSWORD:-}" ]; then
     php bin/create-admin.php
 fi
