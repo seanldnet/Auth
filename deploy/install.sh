@@ -2,8 +2,8 @@
 set -Eeuo pipefail
 REPO="https://raw.githubusercontent.com/seanldnet/Auth/main"
 INSTALL_DIR="/opt/auth"
-if [[ "\${EUID}" -ne 0 ]]; then
-  echo "请使用 root 执行：curl -fsSL \${REPO}/deploy/install.sh | sudo bash"
+if [[ "${EUID}" -ne 0 ]]; then
+  echo "请使用 root 执行：curl -fsSL ${REPO}/deploy/install.sh | sudo bash"
   exit 1
 fi
 if ! command -v apt-get >/dev/null 2>&1; then
