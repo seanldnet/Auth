@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-namespace app\\middleware;
+namespace app\middleware;
 
-use app\\auth\\AuthContext;
-use app\\security\\ApiKeyRequestSigner;
-use app\\security\\ApiKeySecretCipher;
+use app\auth\AuthContext;
+use app\security\ApiKeyRequestSigner;
+use app\security\ApiKeySecretCipher;
 use Closure;
-use think\\facade\\Db;
-use think\\Request;
-use think\\Response;
+use think\facade\Db;
+use think\Request;
+use think\Response;
 
 final class ApiKeyMiddleware
 {
@@ -54,11 +54,11 @@ final class ApiKeyMiddleware
                 if (!ApiKeyRequestSigner::verify($secret, $canonical, $signature)) {
                     return json(['success' => false, 'message' => 'API Key 签名认证失败'], 401);
                 }
-            } catch (\\Throwable) {
+            } catch (\Throwable) {
                 return json(['success' => false, 'message' => 'API Key 签名认证失败'], 401);
             }
         } else {
-            if (!preg_match('/^Bearer\\s+(ak_[a-f0-9]{64})$/i', $authorization, $matches)) {
+            if (!preg_match('/^Bearer\s+(ak_[a-f0-9]{64})$/i', $authorization, $matches)) {
                 return json(['success' => false, 'message' => '缺少有效的 API Key'], 401);
             }
             $plain = strtolower($matches[1]);
@@ -128,7 +128,7 @@ final class ApiKeyMiddleware
                 }
                 Db::execute('UPDATE auth_api_keys SET last_used_at = UTC_TIMESTAMP() WHERE id = ?', [(int)$record['api_key_id']]);
             });
-        } catch (\\Throwable $exception) {
+        } catch (\Throwable $exception) {
             if ($signedHeadersPresent && str_contains(strtolower($exception->getMessage()), 'duplicate')) {
                 return json(['success' => false, 'message' => '请求重复，请使用新的 Nonce'], 409);
             }
