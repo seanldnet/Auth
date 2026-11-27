@@ -1,0 +1,7 @@
+services:
+  backend:
+    image: ghcr.io/seanldnet/auth-backend:ci
+    pull_policy: never
+  frontend:
+    image: ghcr.io/seanldnet/auth-frontend:ci
+    pull_policy: never
