@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-namespace app\\command;
+namespace app\command;
 
-use think\\console\\Command;
-use think\\console\\Input;
-use think\\console\\Output;
-use think\\facade\\Db;
+use think\console\Command;
+use think\console\Input;
+use think\console\Output;
+use think\facade\Db;
 
 final class CleanupApiKeyNonces extends Command
 {
