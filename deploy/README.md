@@ -50,3 +50,13 @@ docker compose restart
 - 默认只配置 HTTP 80，不会自动申请域名证书或配置 HTTPS。生产使用请在前置反向代理配置 TLS。
 - 支付渠道商户参数、回调域名、邮件 SMTP、Telegram Bot 等外部服务尚未配置；无凭据时不能声称这些外部渠道已接通。
 - 初始管理员密码固定为用户要求的 `admin / 123456`，首次登录后强制改密。
+
+## GHCR 镜像首次公开设置（仅需一次）
+
+GitHub Container Registry 首次创建的个人账号镜像包默认是 Private。GitHub 当前没有可用的 REST API 用于自动切换这个可见性，因此第一次发布后，需要在 GitHub 页面各设置一次：
+
+1. 打开 [auth-backend 包设置](https://github.com/users/seanldnet/packages/container/auth-backend/settings)，将 Package visibility 改为 **Public**。
+2. 打开 [auth-frontend 包设置](https://github.com/users/seanldnet/packages/container/auth-frontend/settings)，将 Package visibility 改为 **Public**。
+3. 设置完成后，服务器即可匿名 `docker pull`，安装脚本无需 GitHub Token 或任何服务器端配置。
+
+这是 GitHub 镜像仓库的首次公开权限设置，不是服务器部署配置。后续镜像会由 GitHub Actions 自动构建并推送。
