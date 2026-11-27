@@ -254,11 +254,32 @@ jobs:
           context: .
           file: backend/Dockerfile
           push: false
-          tags: auth-backend:ci
+          load: true
+          tags: ghcr.io/seanldnet/auth-backend:latest
       - name: Build frontend image
         uses: docker/build-push-action@v6
         with:
           context: .
           file: frontend/Dockerfile
           push: false
-          tags: auth-frontend:ci
+          load: true
+          tags: ghcr.io/seanldnet/auth-frontend:latest
+      - name: Boot full Docker stack
+        run: docker compose --env-file .env -f deploy/docker-compose.yml up -d
+      - name: Smoke test frontend, migrations, and default administrator
+        run: |
+          for attempt in $(seq 1 90); do
+            if curl -fsS http://127.0.0.1/api/health >/dev/null 2>&1; then break; fi
+            sleep 5
+          done
+          curl -fsS http://127.0.0.1/ | grep -qi '<div id="root">'
+          login=$(curl -fsS -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{"username":"admin","password":"123456"}' -c /tmp/auth-cookies.txt http://127.0.0.1/api/auth/login)
+          echo "$login" | grep -q '"success":true'
+          echo "$login" | grep -q '"must_change_password":true'
+          test -s /tmp/auth-cookies.txt
+      - name: Show Docker logs on smoke-test failure
+        if: failure()
+        run: docker compose --env-file .env -f deploy/docker-compose.yml logs --tail=150
+      - name: Stop Docker stack
+        if: always()
+        run: docker compose --env-file .env -f deploy/docker-compose.yml down -v
