@@ -1,0 +1,25 @@
+<?php
+declare(strict_types=1);
+
+namespace app\\security;
+
+final class ApiKeyRequestSigner
+{
+    public static function canonicalRequest(string $method, string $path, string $timestamp, string $nonce, string $body): string
+    {
+        $normalizedPath = parse_url($path, PHP_URL_PATH);
+        $normalizedPath = '/' . trim(is_string($normalizedPath) && $normalizedPath !== '' ? $normalizedPath : '/', '/');
+        return strtoupper(trim($method)) . "\n" . $normalizedPath . "\n" . $timestamp . "\n" . $nonce . "\n" . hash('sha256', $body);
+    }
+
+    public static function sign(string $secret, string $canonical): string
+    {
+        return hash_hmac('sha256', $canonical, $secret);
+    }
+
+    public static function verify(string $secret, string $canonical, string $signature): bool
+    {
+        return preg_match('/^[a-f0-9]{64}$/i', $signature) === 1
+            && hash_equals(self::sign($secret, $canonical), strtolower($signature));
+    }
+}
