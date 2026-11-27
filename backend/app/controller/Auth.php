@@ -56,7 +56,7 @@ final class Auth
         setcookie('auth_session', '', [
             'expires' => time() - 3600,
             'path' => '/',
-            'secure' => $request->isSsl() || !(bool) config('app.app_debug', false),
+            'secure' => $this->secureCookie($request),
             'httponly' => true,
             'samesite' => 'Lax',
         ]);
