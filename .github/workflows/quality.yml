@@ -236,7 +236,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Validate deployment shell scripts
-        run: bash -n deploy/install.sh && sh -n deploy/backend-entrypoint.sh
+        run: bash -n deploy/install.sh && sh -n deploy/backend-entrypoint.sh && sh -n deploy/scheduler-entrypoint.sh
       - name: Validate Docker Compose configuration
         run: |
           cat > .env <<'EOF'
