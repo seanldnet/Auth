@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight, BadgeCheck, Blocks, Check, Code2, Fingerprint, Globe2, KeyRound, Layers3, LockKeyhole, ShieldCheck, Sparkles, Workflow, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, BadgeCheck, Check, Code2, Fingerprint, Globe2, KeyRound, Layers3, LockKeyhole, ShieldCheck, Sparkles, Workflow, Zap } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
