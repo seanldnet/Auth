@@ -2,33 +2,33 @@
 set -eu
 cd /var/www/html
 
-: "\${APP_KEY:?APP_KEY is required}"
-: "\${DB_HOST:=db}"
-: "\${DB_NAME:=auth}"
-: "\${DB_USER:=auth}"
-: "\${DB_PASSWORD:?DB_PASSWORD is required}"
-: "\${DB_PORT:=3306}"
-: "\${REDIS_HOST:=redis}"
-: "\${REDIS_PORT:=6379}"
+: "${APP_KEY:?APP_KEY is required}"
+: "${DB_HOST:=db}"
+: "${DB_NAME:=auth}"
+: "${DB_USER:=auth}"
+: "${DB_PASSWORD:?DB_PASSWORD is required}"
+: "${DB_PORT:=3306}"
+: "${REDIS_HOST:=redis}"
+: "${REDIS_PORT:=6379}"
 
 cat > .env <<EOF
 APP_DEBUG = false
 APP_TRACE = false
-APP_KEY = \${APP_KEY}
+APP_KEY = ${APP_KEY}
 [APP]
 DEFAULT_TIMEZONE = Asia/Shanghai
 [DATABASE]
 TYPE = mysql
-HOSTNAME = \${DB_HOST}
-DATABASE = \${DB_NAME}
-USERNAME = \${DB_USER}
-PASSWORD = \${DB_PASSWORD}
-HOSTPORT = \${DB_PORT}
+HOSTNAME = ${DB_HOST}
+DATABASE = ${DB_NAME}
+USERNAME = ${DB_USER}
+PASSWORD = ${DB_PASSWORD}
+HOSTPORT = ${DB_PORT}
 CHARSET = utf8mb4
 PREFIX = auth_
 [REDIS]
-HOST = \${REDIS_HOST}
-PORT = \${REDIS_PORT}
+HOST = ${REDIS_HOST}
+PORT = ${REDIS_PORT}
 PASSWORD =
 SELECT = 0
 EOF
