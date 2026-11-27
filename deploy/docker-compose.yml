@@ -1,0 +1,102 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    environment:
+      MYSQL_DATABASE: auth
+      MYSQL_USER: auth
+      MYSQL_PASSWORD: \${AUTH_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD}
+      TZ: Asia/Shanghai
+    volumes:
+      - auth_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$\${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    networks: [auth-internal]
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - auth_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [auth-internal]
+  backend:
+    image: ghcr.io/seanldnet/auth-backend:latest
+    restart: unless-stopped
+    environment:
+      APP_KEY: \${APP_KEY}
+      APP_DEBUG: "false"
+      DB_HOST: db
+      DB_NAME: auth
+      DB_USER: auth
+      DB_PASSWORD: \${AUTH_DB_PASSWORD}
+      DB_PORT: "3306"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      AUTH_BOOTSTRAP_ADMIN_USERNAME: admin
+      AUTH_BOOTSTRAP_ADMIN_PASSWORD: \${AUTH_BOOTSTRAP_ADMIN_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "php -r '$$c=@file_get_contents(\"http://127.0.0.1/api/health\"); exit($$c===false?1:0);'"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 40s
+    networks: [auth-internal]
+  scheduler:
+    image: ghcr.io/seanldnet/auth-backend:latest
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        until php think auth:cleanup-api-key-nonces; do sleep 10; done
+        while true; do
+          php think auth:cleanup-api-key-nonces || true
+          if [ "$$(date +%M)" = "00" ]; then php think auth:notify-expiring-licenses || true; fi
+          sleep 60
+        done
+    environment:
+      APP_KEY: \${APP_KEY}
+      APP_DEBUG: "false"
+      DB_HOST: db
+      DB_NAME: auth
+      DB_USER: auth
+      DB_PASSWORD: \${AUTH_DB_PASSWORD}
+      DB_PORT: "3306"
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      AUTH_BOOTSTRAP_ADMIN_USERNAME: admin
+      AUTH_BOOTSTRAP_ADMIN_PASSWORD: \${AUTH_BOOTSTRAP_ADMIN_PASSWORD}
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [auth-internal]
+  frontend:
+    image: ghcr.io/seanldnet/auth-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks: [auth-internal]
+volumes:
+  auth_mysql_data:
+  auth_redis_data:
+networks:
+  auth-internal:
+    driver: bridge
