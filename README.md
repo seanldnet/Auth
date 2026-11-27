@@ -23,7 +23,7 @@
 - 代理授权额度按软件/套餐隔离，由管理员分配；代理不能向下级代理转额度。
 - 代理 API Key 只能调用授权及用户/下级查询等允许的接口；管理员权限仍由服务端中间件和控制器校验。
 
-## 文档导航
+## Docker 一键部署\n\nUbuntu/Debian 服务器一键部署说明见 [deploy/README.md](deploy/README.md)。首次镜像发布并设置 GHCR 容器包为 Public 后，可执行：\n\n```bash\ncurl -fsSL https://raw.githubusercontent.com/seanldnet/Auth/main/deploy/install.sh | sudo bash\n```\n\n## 文档导航
 - [需求规格 V1.3](docs/requirements/PRD-V1.3.md)
 - [开发进度与验收台账](docs/development/project-status.md)
 - [全球架构设计](docs/architecture/global-architecture.md)
