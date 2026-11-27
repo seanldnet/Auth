@@ -1,4 +1,5 @@
 FROM php:8.2-apache-bookworm
+LABEL org.opencontainers.image.source=https://github.com/seanldnet/Auth
 RUN apt-get update \
     && apt-get install -y --no-install-recommends default-mysql-client unzip git libcurl4-openssl-dev libonig-dev \
     && docker-php-ext-install curl mbstring pdo_mysql \
