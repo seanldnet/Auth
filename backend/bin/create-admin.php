@@ -19,8 +19,8 @@ if ($username === '' || $password === '' || strlen($password) < 6) {
 }
 
 if (Db::name('users')->count() > 0) {
-    fwrite(STDERR, "Bootstrap refused: auth_users is not empty. Use the existing administrator account.\n");
-    exit(1);
+    fwrite(STDOUT, "Existing users detected; bootstrap administrator creation skipped.\\n");
+    exit(0);
 }
 
 $algorithm = in_array('argon2id', password_algos(), true) ? PASSWORD_ARGON2ID : PASSWORD_DEFAULT;
