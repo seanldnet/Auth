@@ -4,7 +4,11 @@
 
 The entire Auth frontend must use **shadcn/ui** as its single UI component system.
 
-This is a project requirement, not a preference:
+This is a project requirement, not a preference.
+
+The project uses the official **shadcn/ui New York (Tailwind CSS v4) registry**. shadcn/ui distributes component source into the repository; seeing component source code in `frontend/src/components/ui` is expected. The source must come from the official registry, not from a locally invented replacement. Radix packages are implementation primitives used by the official shadcn components, not a second UI framework.
+
+Component installation and updates must follow the shadcn registry/CLI (`npx shadcn@latest add <component>`) or the matching official registry source. Adapt only import aliases and the Radix package import style required by this repository; do not redesign the component implementation.
 
 - Do not hand-write replacement buttons, inputs, selects, textareas, checkboxes, switches, dialogs, dropdowns, tabs, tables, tooltips, alerts, badges, cards, or other reusable UI controls.
 - Use the corresponding component from `frontend/src/components/ui` (shadcn/ui conventions and Radix UI primitives).
