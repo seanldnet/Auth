@@ -67,5 +67,6 @@
 - 已新增后端/前端 Dockerfile、Nginx API 反向代理、MySQL 迁移执行器、管理员首次初始化脚本修正、Docker Compose 和 GHCR 发布流水线。
 - 部署目标：Ubuntu/Debian x86_64，默认 HTTP 80；服务器只拉取镜像，不进行 Composer/npm 编译。
 - 首次管理员：admin / 123456；首次登录强制改密；APP_KEY、数据库和 Redis 密码由安装脚本随机生成。
-- 当前状态：PR/CI 与 GHCR 镜像公开拉取仍待验证；在镜像发布流水线通过且匿名拉取确认前，不得将部署标记为可用。
+- GitHub Actions 验证：2026-11-27，提交 `4610ba975607eeca8a9430b061836fa4b400e390` 的 **Publish Docker Images** 和 **Quality Gates** 均成功；backend、frontend 两个镜像构建与推送步骤均成功。运行记录：https://github.com/seanldnet/Auth/actions/runs/45948726676
+- GHCR 匿名拉取及全新服务器实机部署尚未完成验证。首次发布的 GHCR package 可能默认为 Private；需确认 `auth-backend`、`auth-frontend` 均为 Public 后，免 Token 安装命令才能直接拉取。
 - 未自动配置 HTTPS、支付商户凭据、SMTP 或 Telegram Bot。生产环境需配置 TLS 并更换初始密码。
