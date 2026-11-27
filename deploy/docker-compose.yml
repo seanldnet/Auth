@@ -6,13 +6,13 @@ services:
     environment:
       MYSQL_DATABASE: auth
       MYSQL_USER: auth
-      MYSQL_PASSWORD: \${AUTH_DB_PASSWORD}
-      MYSQL_ROOT_PASSWORD: \${MYSQL_ROOT_PASSWORD}
+      MYSQL_PASSWORD: ${AUTH_DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       TZ: Asia/Shanghai
     volumes:
       - auth_mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$\${MYSQL_ROOT_PASSWORD} --silent"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$${MYSQL_ROOT_PASSWORD} --silent"]
       interval: 5s
       timeout: 5s
       retries: 30
@@ -34,17 +34,17 @@ services:
     image: ghcr.io/seanldnet/auth-backend:latest
     restart: unless-stopped
     environment:
-      APP_KEY: \${APP_KEY}
+      APP_KEY: ${APP_KEY}
       APP_DEBUG: "false"
       DB_HOST: db
       DB_NAME: auth
       DB_USER: auth
-      DB_PASSWORD: \${AUTH_DB_PASSWORD}
+      DB_PASSWORD: ${AUTH_DB_PASSWORD}
       DB_PORT: "3306"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       AUTH_BOOTSTRAP_ADMIN_USERNAME: admin
-      AUTH_BOOTSTRAP_ADMIN_PASSWORD: \${AUTH_BOOTSTRAP_ADMIN_PASSWORD}
+      AUTH_BOOTSTRAP_ADMIN_PASSWORD: ${AUTH_BOOTSTRAP_ADMIN_PASSWORD}
     depends_on:
       db:
         condition: service_healthy
@@ -70,17 +70,17 @@ services:
           sleep 60
         done
     environment:
-      APP_KEY: \${APP_KEY}
+      APP_KEY: ${APP_KEY}
       APP_DEBUG: "false"
       DB_HOST: db
       DB_NAME: auth
       DB_USER: auth
-      DB_PASSWORD: \${AUTH_DB_PASSWORD}
+      DB_PASSWORD: ${AUTH_DB_PASSWORD}
       DB_PORT: "3306"
       REDIS_HOST: redis
       REDIS_PORT: "6379"
       AUTH_BOOTSTRAP_ADMIN_USERNAME: admin
-      AUTH_BOOTSTRAP_ADMIN_PASSWORD: \${AUTH_BOOTSTRAP_ADMIN_PASSWORD}
+      AUTH_BOOTSTRAP_ADMIN_PASSWORD: ${AUTH_BOOTSTRAP_ADMIN_PASSWORD}
     depends_on:
       backend:
         condition: service_healthy
