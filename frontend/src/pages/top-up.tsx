@@ -161,18 +161,18 @@ export function TopUpPage() {
               ) : (
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {availableChannels.map((channel) => (
-                    <button
+                    <Button
                       key={channel.channel_code}
                       type="button"
                       onClick={() => { setChannelCode(channel.channel_code); setIdempotencyKey(""); }}
-                      className={"flex min-h-20 items-center justify-between gap-3 rounded-lg border p-4 text-left transition-colors " + (channelCode === channel.channel_code ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/60")}
+                      variant="outline" className={"h-auto min-h-20 w-full justify-between rounded-lg p-4 text-left transition-colors " + (channelCode === channel.channel_code ? "border-primary bg-primary/5 ring-1 ring-primary" : "hover:bg-muted/60")}
                     >
                       <span className="flex flex-col gap-1">
                         <span className="font-medium">{channel.display_name}</span>
                         <span className="text-xs text-muted-foreground">{channel.channel_code}</span>
                       </span>
                       <Badge variant={channelCode === channel.channel_code ? "default" : "outline"}>托管收银台</Badge>
-                    </button>
+                    </Button>
                   ))}
                 </div>
               )}
