@@ -99,7 +99,7 @@ export function AdminLayout() {
 
   return <div className="min-h-screen bg-slate-50 text-slate-950">
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 border-r lg:block">{sidebar()}</aside>
-    {mobileOpen ? <div className="fixed inset-0 z-40 lg:hidden"><button aria-label="关闭菜单遮罩" className="absolute inset-0 bg-black/40" onClick={() => setMobileOpen(false)}/><aside className="absolute inset-y-0 left-0 w-[min(84vw,320px)] shadow-xl">{sidebar(true)}</aside></div> : null}
+    {mobileOpen ? <div className="fixed inset-0 z-40 lg:hidden"><Button type="button" variant="ghost" aria-label="关闭菜单遮罩" className="absolute inset-0 h-full w-full rounded-none bg-black/40 hover:bg-black/50" onClick={() => setMobileOpen(false)} /><aside className="absolute inset-y-0 left-0 w-[min(84vw,320px)] shadow-xl">{sidebar(true)}</aside></div> : null}
     <div className="lg:pl-64">
       <header className="sticky top-0 z-10 flex min-h-16 items-center justify-between gap-3 border-b border-slate-200/80 bg-white/90 px-4 py-3 backdrop-blur sm:px-6">
         <div className="flex items-center gap-3"><Button className="lg:hidden" variant="ghost" size="icon" aria-label="打开菜单" onClick={() => setMobileOpen(true)}><Menu className="size-5"/></Button><div><p className="text-sm font-semibold tracking-tight">Auth 管理控制台</p><p className="text-xs text-slate-500">多软件授权 · 统一运营中心</p></div></div>
