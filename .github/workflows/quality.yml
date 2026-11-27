@@ -230,3 +230,23 @@ jobs:
       - name: Run Kotlin SDK tests
         run: /tmp/gradle-8.12/bin/gradle --no-daemon test
         working-directory: sdk/kotlin
+
+  docker-images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: false
+          tags: auth-backend:ci
+      - name: Build frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: false
+          tags: auth-frontend:ci
