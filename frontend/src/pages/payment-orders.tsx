@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 
 type PaymentOrder = {
   order_no: string;
@@ -93,7 +94,7 @@ export function PaymentOrdersPage() {
           <History className="size-5 text-muted-foreground" />
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
-          {role === "ADMIN" ? <div className="grid gap-3 sm:grid-cols-[1fr_200px]"><input className="h-10 rounded-md border bg-background px-3 text-sm" value={keyword} onChange={e=>{setKeyword(e.target.value);setPage(1);}} placeholder="搜索订单号 / 用户 / 交易号"/><Select value={statusFilter || "__all"} onValueChange={v=>{setStatusFilter(v==="__all"?"":v);setPage(1);}}><SelectTrigger><SelectValue placeholder="全部状态" /></SelectTrigger><SelectContent><SelectItem value="__all">全部状态</SelectItem>{Object.entries(statusMeta).map(([k,v])=><SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent></Select></div> : null}
+          {role === "ADMIN" ? <div className="grid gap-3 sm:grid-cols-[1fr_200px]"><Input value={keyword} onChange={e=>{setKeyword(e.target.value);setPage(1);}} placeholder="搜索订单号 / 用户 / 交易号" aria-label="搜索订单号、用户或交易号" /><Select value={statusFilter || "__all"} onValueChange={v=>{setStatusFilter(v==="__all"?"":v);setPage(1);}}><SelectTrigger><SelectValue placeholder="全部状态" /></SelectTrigger><SelectContent><SelectItem value="__all">全部状态</SelectItem>{Object.entries(statusMeta).map(([k,v])=><SelectItem key={k} value={k}>{v.label}</SelectItem>)}</SelectContent></Select></div> : null}
           {error ? <p role="alert" className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive">{error}</p> : null}
           {loading ? (
             <div className="flex items-center justify-center gap-3 py-8 text-sm text-muted-foreground">
