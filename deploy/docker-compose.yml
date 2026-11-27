@@ -36,8 +36,8 @@ services:
     restart: unless-stopped
     environment:
       APP_KEY: ${APP_KEY}
-      APP_DEBUG: "false"
-      APP_TRACE: "false"
+      APP_DEBUG: "0"
+      APP_TRACE: "0"
       DATABASE_TYPE: mysql
       DATABASE_HOSTNAME: db
       DATABASE_PORT: "3306"
