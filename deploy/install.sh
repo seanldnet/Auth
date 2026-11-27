@@ -10,21 +10,26 @@ if ! command -v apt-get >/dev/null 2>&1; then
   echo "当前一键安装脚本支持 Ubuntu / Debian。"
   exit 1
 fi
+apt-get update
+apt-get install -y ca-certificates curl openssl iproute2
+
 if ! command -v docker >/dev/null 2>&1; then
   echo "[1/5] 正在安装 Docker Engine..."
-  apt-get update
-  apt-get install -y ca-certificates curl
   curl -fsSL https://get.docker.com | sh
 fi
 if ! docker compose version >/dev/null 2>&1; then
-  echo "Docker Compose 插件未安装，请检查 Docker 安装源后重试。"
-  exit 1
+  echo "[1/5] 正在安装 Docker Compose 插件..."
+  apt-get install -y docker-compose-plugin || curl -fsSL https://get.docker.com | sh
+fi
+if command -v systemctl >/dev/null 2>&1; then
+  systemctl enable --now docker
+else
+  service docker start
 fi
 mkdir -p "$INSTALL_DIR"
 cd "$INSTALL_DIR"
 if [[ ! -f .env ]]; then
   echo "[2/5] 正在生成数据库和应用密钥..."
-  command -v openssl >/dev/null 2>&1 || apt-get install -y openssl
   APP_KEY="$(openssl rand -hex 32)"
   AUTH_DB_PASSWORD="$(openssl rand -hex 24)"
   MYSQL_ROOT_PASSWORD="$(openssl rand -hex 24)"
