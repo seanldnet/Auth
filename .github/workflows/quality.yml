@@ -270,13 +270,23 @@ jobs:
           tags: ghcr.io/seanldnet/auth-frontend:latest
       - name: Boot full Docker stack
         run: docker compose --env-file .env -f deploy/docker-compose.yml up -d
+      - name: Inspect initialized Docker services
+        run: |
+          docker compose --env-file .env -f deploy/docker-compose.yml ps
+          docker compose --env-file .env -f deploy/docker-compose.yml logs --tail=80 backend scheduler frontend
       - name: Smoke test frontend, migrations, and default administrator
         run: |
-          for attempt in $(seq 1 90); do
-            if curl -fsS http://127.0.0.1/api/health >/dev/null 2>&1; then break; fi
+          ready=false
+          for attempt in $(seq 1 60); do
+            if curl --max-time 5 -fsS http://127.0.0.1/api/health >/dev/null 2>&1; then ready=true; break; fi
             sleep 5
           done
-          curl -fsS http://127.0.0.1/ | grep -qi '<div id="root">'
+          if [ "$ready" != "true" ]; then
+            docker compose --env-file .env -f deploy/docker-compose.yml ps
+            docker compose --env-file .env -f deploy/docker-compose.yml logs --tail=150 backend scheduler frontend db
+            exit 1
+          fi
+          curl --max-time 15 -fsS http://127.0.0.1/ | grep -qi '<div id="root">'
           login=$(curl -fsS -H 'Content-Type: application/json' -H 'Accept: application/json' -d '{"username":"admin","password":"123456"}' -c /tmp/auth-cookies.txt http://127.0.0.1/api/auth/login)
           echo "$login" | grep -q '"success":true'
           echo "$login" | grep -q '"must_change_password":true'
