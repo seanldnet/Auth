@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 
 type Software = { id: number; name: string; app_id: string; status: string };
 type Plan = { id: number; name: string; plan_code: string; duration_unit: string; duration_value: number | null; price: string; currency: string; status: string };
@@ -185,7 +186,7 @@ export function LicensesPage() {
       </Card>
       <Card>
         <CardHeader><CardTitle className="text-base">批量导入授权码</CardTitle><CardDescription>每行一个授权码，单次最多 500 个；重复或格式错误时整批回滚。</CardDescription></CardHeader>
-        <CardContent><form onSubmit={importKeys} className="flex flex-col gap-3"><label className="text-sm font-medium">授权码列表</label><textarea className="min-h-36 w-full rounded-md border bg-background p-3 font-mono text-xs" value={importText} onChange={e=>setImportText(e.target.value)} placeholder={"每行一个，例如：\\n12345678-12345678-12345678-12345678"} /><div className="flex flex-wrap items-center gap-3"><Button type="submit" disabled={saving||!selectedSoftwareId||!selectedPlanId||!importText.trim()}>{saving?<LoaderCircle className="size-4 animate-spin"/>:<Plus className="size-4"/>}导入授权码</Button><span className="text-xs text-muted-foreground">必须选择软件和套餐；导入成功后仅保存 SHA-256 摘要。</span></div></form></CardContent>
+        <CardContent><form onSubmit={importKeys} className="flex flex-col gap-3"><label className="text-sm font-medium">授权码列表</label><Textarea className="min-h-36 w-full rounded-md border bg-background p-3 font-mono text-xs" value={importText} onChange={e=>setImportText(e.target.value)} placeholder={"每行一个，例如：\\n12345678-12345678-12345678-12345678"} /><div className="flex flex-wrap items-center gap-3"><Button type="submit" disabled={saving||!selectedSoftwareId||!selectedPlanId||!importText.trim()}>{saving?<LoaderCircle className="size-4 animate-spin"/>:<Plus className="size-4"/>}导入授权码</Button><span className="text-xs text-muted-foreground">必须选择软件和套餐；导入成功后仅保存 SHA-256 摘要。</span></div></form></CardContent>
       </Card>
       <Card>
         <CardHeader><CardTitle className="text-base">授权记录</CardTitle><CardDescription>{selectedSoftware ? `${selectedSoftware.name} · 共 ${total} 条记录` : "请选择软件"}</CardDescription></CardHeader>
