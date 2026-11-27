@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { DashboardPage } from "@/pages/dashboard";
+import { HomePage } from "@/pages/home";
 import { LoginPage } from "@/pages/login";
 import { PaymentsPage } from "@/pages/payments";
 import { AdminLayout } from "@/layouts/admin-layout";
@@ -29,6 +30,7 @@ import { WalletPage } from "@/pages/wallet";
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<HomePage />} />
       <Route path="/checkout/:orderNo/:token" element={<CheckoutPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
