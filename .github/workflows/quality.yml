@@ -277,9 +277,9 @@ jobs:
       - name: Smoke test frontend, migrations, and default administrator
         run: |
           ready=false
-          for attempt in $(seq 1 60); do
-            if curl --max-time 5 -fsS http://127.0.0.1/api/health >/dev/null 2>&1; then ready=true; break; fi
-            sleep 5
+          for attempt in $(seq 1 30); do
+            if curl --max-time 3 -fsS http://127.0.0.1/api/health >/dev/null 2>&1; then ready=true; break; fi
+            sleep 3
           done
           if [ "$ready" != "true" ]; then
             docker compose --env-file .env -f deploy/docker-compose.yml ps
