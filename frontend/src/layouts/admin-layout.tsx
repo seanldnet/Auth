@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Activity, AppWindow, Bell, BookOpen, CreditCard, FileClock, Globe2, KeyRound, LayoutDashboard, Layers, LogOut, Settings, ShieldCheck, Users, LoaderCircle, Wallet, ReceiptText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, Sidebar, SidebarHeader, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarTrigger, SidebarRail, SidebarGroupContent } from "@/components/ui/sidebar";
 
 type Role = "ADMIN" | "AGENT" | "SUB_AGENT" | "USER";
 type SessionUser = { username: string; role: Role; must_change_password?: boolean };
@@ -26,10 +26,11 @@ export function AdminLayout(){
  async function logout(){try{await fetch("/api/auth/logout",{method:"POST",credentials:"include",headers:{Accept:"application/json"}});}finally{navigate("/login",{replace:true});}}
  if(loading||!user)return <main className="flex min-h-screen items-center justify-center bg-background"><div className="flex items-center gap-3 text-sm text-muted-foreground"><LoaderCircle className="size-5 animate-spin"/>正在验证登录状态…</div></main>;
  return <SidebarProvider className="bg-background text-foreground">
-  <Sidebar>
+  <Sidebar collapsible="icon">
    <SidebarHeader><div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">A</div><div className="min-w-0"><p className="truncate text-sm font-semibold">Auth Console</p><p className="truncate text-xs text-muted-foreground">授权管理平台</p></div></SidebarHeader>
-   <SidebarContent>{visibleGroups.map(group=><SidebarGroup key={group.title}><SidebarGroupLabel>{group.title}</SidebarGroupLabel><SidebarMenu>{group.items.map(({label,to,icon:Icon})=><SidebarMenuItem key={to}><SidebarMenuButton asChild isActive={location.pathname===to}><NavLink to={to}><Icon className="size-4 shrink-0"/><span>{label}</span></NavLink></SidebarMenuButton></SidebarMenuItem>)}</SidebarMenu></SidebarGroup>)}</SidebarContent>
+   <SidebarContent>{visibleGroups.map(group=><SidebarGroup key={group.title}><SidebarGroupLabel>{group.title}</SidebarGroupLabel><SidebarGroupContent><SidebarMenu>{group.items.map(({label,to,icon:Icon})=><SidebarMenuItem key={to}><SidebarMenuButton asChild isActive={location.pathname===to} tooltip={label}><NavLink to={to}><Icon className="size-4 shrink-0"/><span>{label}</span></NavLink></SidebarMenuButton></SidebarMenuItem>)}</SidebarMenu></SidebarGroupContent></SidebarGroup>)}</SidebarContent>
    <SidebarFooter>V1.3 · {user.role} · 管理控制台</SidebarFooter>
+   <SidebarRail />
   </Sidebar>
   <SidebarInset>
    <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between gap-3 border-b bg-background/95 px-4 py-3 backdrop-blur sm:px-6">
