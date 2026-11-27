@@ -91,7 +91,7 @@ export function AdminLayout() {
         {mobile ? <Button variant="ghost" size="icon" aria-label="关闭菜单" onClick={() => setMobileOpen(false)}><X className="size-5"/></Button> : null}
       </div>
       <nav className="flex-1 space-y-5 overflow-y-auto p-4">
-        {visibleGroups.map(group => <section key={group.title} className="space-y-1"><p className="px-3 pb-1 text-[11px] font-semibold tracking-[.16em] text-slate-500">{group.title}</p>{group.items.map(({ label, to, icon: Icon }) => <NavLink key={to} to={to} onClick={() => setMobileOpen(false)} className={({ isActive }) => cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors", isActive ? "bg-indigo-500/15 text-indigo-200 ring-1 ring-inset ring-indigo-400/20" : "text-slate-400 hover:bg-white/5 hover:text-white")}><Icon className="size-4 shrink-0"/>{label}</NavLink>)}</section>)}
+        {visibleGroups.map(group => <section key={group.title} className="space-y-1"><p className="px-3 pb-1 text-[11px] font-semibold tracking-[.16em] text-slate-500">{group.title}</p>{group.items.map(({ label, to, icon: Icon }) => <NavLink key={to} to={to} onClick={() => setMobileOpen(false)} className={({ isActive }) => cn("flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors", isActive ? "bg-white/10 text-white ring-1 ring-inset ring-white/15" : "text-slate-400 hover:bg-white/5 hover:text-white")}><Icon className="size-4 shrink-0"/>{label}</NavLink>)}</section>)}
       </nav>
       <div className="border-t border-white/10 p-4"><p className="text-xs text-slate-500">V1.3 · {user.role} · 管理控制台</p></div>
     </div>
