@@ -1,0 +1,9 @@
+.git
+.github
+**/node_modules
+**/vendor
+**/.env
+**/.env.*
+**/runtime
+**/dist
+**/.DS_Store
