@@ -20,7 +20,7 @@ No production secrets belong in this repository. Payment credentials and signing
 - Register a channel row in `auth_payment_channels` only after the corresponding merchant contract and callback URL are configured. `credentials_ciphertext` must be produced by `PaymentCredentialCipher::encrypt(json_encode($credentials))`; the credentials JSON must contain the provider secret key. The `configuration` JSON contains non-secret endpoint, callback, and checkout allow-list settings.
 - Provider callbacks use `POST|GET /api/payments/callback/{channel}`. GMPay/EPUSDT acknowledge a committed callback with plain text `ok`; EPay uses plain text `success`.
 - A callback only credits the platform amount and currency from the immutable local payment order. Provider amount/currency are checked against the provider snapshot; `actual_amount` is never credited.
-- Wallet account rows for both currencies must be initialized when a user wallet is created. Missing wallet rows intentionally cause callback rejection and provider retry rather than silently creating an untracked account.
+- Each user has exactly one wallet account and one balance. Payment orders retain their selected platform/provider currency snapshots for gateway validation only; successful callbacks credit the same numeric order amount to the single wallet. The global CNY/U setting changes display labels only and never converts or splits the balance.
 
 The payment schema and callback endpoint are a backend foundation. Channel configuration management, payment order creation, customer cashier UI, reconciliation workers, and live merchant verification remain separate implementation steps.
 
@@ -29,7 +29,7 @@ The payment schema and callback endpoint are a backend foundation. Channel confi
 - Payment order creation is provided by `PaymentOrderService::create()`; call it only after the authenticated API layer has resolved the user ID.
 - The caller supplies an idempotency key. Repeated requests with the same user and key return the same order instead of creating a second provider order.
 - Platform amount and provider amount are identical. The service requires an explicit provider-currency mapping for each platform currency and never calculates an exchange rate.
-- The user wallet must already have a separate row for the selected CNY or USDT currency.
+- The user's single wallet account must already exist; there are no currency-specific wallet rows or balances.
 - The returned `checkout_url` is the Auth cashier page. Its 256-bit token is stored only as a SHA-256 hash in the payment order.
 - The public read endpoint is `GET /api/payments/cashier/{orderNo}/{token}`; it returns only safe order data and the validated provider cashier URL. It never returns merchant credentials.
 - The React cashier page polls this endpoint every five seconds while the order is being created or is pending.
@@ -65,3 +65,13 @@ Payment order creation is now available at authenticated `POST /api/payments/ord
 - Request JSON fields: `channel_code`, `currency` (`CNY` or `USDT`), `amount`, optional `payment_type`, and optional paired `token` + `network`.
 - The provider currency is selected from the administrator's explicit `provider_currency_by_platform_currency` map. Provider amount is exactly the same numeric amount as the platform order amount; the service performs no exchange-rate conversion.
 - The API returns an Auth `checkout_url`; the customer page then displays the validated provider cashier URL and polls the order status.
+
+
+## API Key request signing
+
+- New API Keys support HMAC-SHA256 request signing in addition to the legacy Bearer token.
+- Set `APP_KEY` to a random secret of at least 32 characters; it is used for AES-256-GCM encryption of the API signing Secret.
+- Apply migration `database/schema/016_api_key_request_signatures.sql` after migration 015.
+- Signed requests use `X-API-Key-Id`, `X-API-Timestamp`, `X-API-Nonce`, and `X-API-Signature`; the timestamp window is 300 seconds and a nonce can be used only once per Key.
+- Schedule `php think auth:cleanup-api-key-nonces` every 5 minutes to remove expired replay-protection records.
+- Existing API Keys remain valid with `Authorization: Bearer`; rotate to a newly created Key to use signed requests. See `docs/api/api-key-authentication.md` for the canonical signing format.

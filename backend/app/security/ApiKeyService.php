@@ -52,12 +52,13 @@ final class ApiKeyService
 
         $plain = 'ak_' . bin2hex(random_bytes(32));
         $prefix = substr($plain, 0, 15);
-        $id = Db::transaction(function () use ($ownerId, $name, $prefix, $plain, $scopes, $ips, $expiry): int {
+        $secretCiphertext = ApiKeySecretCipher::encrypt(substr($plain, 15));
+        $id = Db::transaction(function () use ($ownerId, $name, $prefix, $plain, $secretCiphertext, $scopes, $ips, $expiry): int {
             Db::execute(
                 'INSERT INTO auth_api_keys
-                 (owner_user_id, key_name, key_prefix, key_hash, scopes, ip_allowlist, expires_at, created_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
-                [$ownerId, $name, $prefix, hash('sha256', $plain),
+                 (owner_user_id, key_name, key_prefix, key_hash, secret_ciphertext, scopes, ip_allowlist, expires_at, created_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, UTC_TIMESTAMP())',
+                [$ownerId, $name, $prefix, hash('sha256', $plain), $secretCiphertext,
                  json_encode($scopes, JSON_THROW_ON_ERROR), $ips === [] ? null : json_encode($ips, JSON_THROW_ON_ERROR), $expiry],
             );
             $id = (int)Db::getLastInsID();

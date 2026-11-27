@@ -5,45 +5,49 @@
 - POST /api/keys：创建 Key。完整密钥只在创建响应中返回一次。
 - DELETE /api/keys/{keyId}：撤销 Key；管理员可撤销全站 Key，代理只能撤销本人 Key。
 
-创建请求字段：
-- name：名称，最多 80 字。
-- scopes：代理可选权限；管理员创建时服务端强制设为 *。
-- ip_allowlist：可选 IP 数组；为空表示不限制 IP。
-- expires_at：可选到期时间。
+创建请求字段：name、scopes、ip_allowlist、expires_at。管理员的 scope 由服务端固定为 `*`；代理只能选择授权、用户/下级和额度只读/授权操作范围。普通 USER 不能创建 API Key。
 
-代理可用权限：
-- licenses.create
-- licenses.read
-- licenses.renew
-- licenses.replace
-- users.read
-- users.children.read
-- quotas.read
+## 兼容的 Bearer 认证
+已有客户端可继续使用：
 
-普通 USER 不能创建 API Key。代理不能获得管理员全站权限，也不能调用额度分配、支付渠道、钱包管理、系统设置等管理员接口。
+```http
+Authorization: Bearer ak_<64 位十六进制密钥>
+```
 
-## 管理员 API Key
+该方式保持向后兼容。新创建的 Key 同时支持下面的签名方式；历史 Key 未保存可恢复的 Secret，因此仍使用 Bearer 方式，建议逐步轮换为新 Key。
 
-管理员密钥的 scope 固定为 *，可访问现有受保护的 /api/* 管理与业务接口（登录、注册、密码管理端点除外），包括用户、软件、授权、额度、钱包、支付订单、支付渠道、审计、区域节点和系统设置。服务端仍执行原控制器与 AdminMiddleware 的角色检查。
+## HMAC-SHA256 签名认证（推荐）
+签名请求使用 HTTPS，并发送以下 Header：
 
-## 代理 API Key
+- `X-API-Key-Id`：创建响应中 `key_prefix` 的值（15 个字符）。
+- `X-API-Timestamp`：Unix 秒时间戳，服务端允许的时钟偏差最多 300 秒。
+- `X-API-Nonce`：每次请求随机生成的唯一值，16–64 位，仅允许字母、数字、下划线和连字符。
+- `X-API-Signature`：规范化请求的 HMAC-SHA256 十六进制签名。
 
-Header：Authorization: Bearer ak_<64 位十六进制密钥>
+创建响应中的 `api_key` 仍是兼容 Bearer Token。签名 Secret 为该值去掉前 15 个字符后的剩余 52 个十六进制字符；Secret 只在创建响应中出现一次，必须安全保存。服务端以 AES-256-GCM 加密保存 Secret，密钥来自部署环境变量 `APP_KEY`（至少 32 字符），数据库同时只保存 Bearer Token 的 SHA-256 摘要用于旧协议兼容。
 
-- GET /api/licenses：仅查询本人签发授权；代理可用。
-- POST /api/licenses：按本人额度签发授权；必须传 Idempotency-Key。
-- POST /api/licenses/{licenseId}/renew：续费本人签发授权，需 licenses.renew 权限和 Idempotency-Key。
-- POST /api/licenses/{licenseId}/replace：更换本人签发授权，需 licenses.replace 权限和 Idempotency-Key。
-- GET /api/users：按当前代理角色查询其可见用户范围。
-- GET /api/license-quotas：仅查询本人额度账户。
-- GET /api/v1/licenses、POST /api/v1/licenses、POST /api/v1/licenses/{licenseId}/renew：兼容的版本化授权接口。
-- GET /api/v1/users、GET /api/v1/users/children、GET /api/v1/quotas：版本化查询接口。
+规范化原文按以下五行以 LF 连接，末尾不加换行：
 
-代理密钥不能访问 /api/admin/*、支付管理、钱包人工入账、系统设置、区域节点和审计管理接口。下级代理的数据范围仍由服务端按层级限制。
+```text
+UPPERCASE_HTTP_METHOD
+/normalized/request/path
+UNIX_TIMESTAMP
+NONCE
+LOWERCASE_HEX_SHA256_OF_EXACT_BODY_BYTES
+```
 
-## 安全机制
-- 所有 API Key 只保存 SHA-256 摘要。
-- 支持到期时间、IP 白名单、权限范围、最后使用时间和撤销。
-- 撤销后立即失效。
-- API Key 通过 Authorization Bearer 头传递，不依赖浏览器 Cookie；管理接口继续执行原有服务端角色鉴权。
-- v1 API 当前未实现独立请求签名、时间戳防重放和速率限制，生产环境接入前仍需补齐。
+签名计算：`HMAC-SHA256(canonical_message, API_SECRET)`。查询字符串不参与 path；请求体必须使用实际发送的原始字节，不得先解析后重新序列化。GET 请求的 body 为空字符串。
+
+## 防重放与权限
+- 时间戳超出 300 秒窗口拒绝。
+- Nonce 在单个 API Key 范围内唯一，服务端通过唯一索引原子写入，重复请求返回 HTTP 409；Nonce 保留至少 10 分钟。
+- Key 必须未撤销、未过期，所属用户必须处于 ACTIVE。
+- 精确 IP 白名单非空时，来源 IP 必须匹配。
+- 验签后继续执行原有 scope、角色及资源归属检查；签名不能扩大代理的数据范围。
+- 管理员 `*` 仍经过控制器/AdminMiddleware 的角色校验；代理 Key 不能访问管理员管理接口。
+
+## 当前实现边界
+- 新创建的 API Key 支持 HMAC 签名和 Nonce 防重放。
+- 旧 Key 继续支持 Bearer；迁移后创建的新 Key 同时保留 Bearer 兼容能力。
+- 尚未实现按 Key/IP 的请求速率限制和 Nonce 清理定时任务；生产环境仍需配置清理任务及网关级限流。
+- 数据库升级脚本：`backend/database/schema/016_api_key_request_signatures.sql`。
